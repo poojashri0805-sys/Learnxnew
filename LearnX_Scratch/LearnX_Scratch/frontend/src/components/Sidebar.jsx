@@ -34,8 +34,6 @@ const teacherMenu = [
   { label: "Curriculum Tracker", path: "/teacher/curriculum-tracker", icon: Layers3 },
   { label: "Textbook Upload", path: "/teacher/textbook-upload", icon: BookOpen },
   { label: "Auto Grading", path: "/teacher/auto-grading", icon: CheckSquare },
-  { label: "Learning Gaps", path: "/teacher/learning-gaps", icon: Search },
-  { label: "Video Generator", path: "/teacher/video-generator", icon: Video },
   { label: "Leaderboard", path: "/teacher/leaderboard", icon: Trophy },
   
 ];
@@ -46,7 +44,7 @@ export default function Sidebar() {
   const menuItems = role === "teacher" ? teacherMenu : studentMenu;
 
   return (
-    <aside className="w-72 min-h-screen bg-[#0f172a] text-white border-r border-white/10 flex flex-col">
+    <aside className="fixed left-0 top-0 w-72 h-screen bg-[#0f172a] text-white border-r border-white/10 flex flex-col z-50">
       <div className="px-5 py-6 border-b border-white/10 flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white shadow-md">
           ✦
