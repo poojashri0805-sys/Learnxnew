@@ -29,6 +29,7 @@ app.use("/api/leaderboard", require("./routes/leaderboardRoutes"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/textbooks", require("./routes/textbookRoutes"));
 app.use("/api/chatbot", require("./routes/chatbotRoutes"));
+app.use("/api/teacher", require("./routes/teacherDashboardRoutes"));
 app.get("/", (req, res) => {
   res.send("LearnX API is running");
 });

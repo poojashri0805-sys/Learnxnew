@@ -48,52 +48,53 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-white to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       {/* NAVBAR */}
-      <div className="flex justify-between items-center px-8 py-6">
+      <div className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-2 text-purple-600 font-bold text-2xl">
-          🎓 LearnX
+          <span className="text-3xl">🎓</span>
+          <span>LearnX</span>
         </div>
 
         <div className="flex gap-3">
           <Link
             to="/login"
-            className="px-5 py-2 rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition"
+            className="px-6 py-2.5 rounded-xl border-2 border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-purple-200 transition-all font-medium text-gray-700"
           >
             Login
           </Link>
-          <button className="px-5 py-2 rounded-xl bg-purple-600 text-white shadow-md hover:bg-purple-700 transition">
+          <button className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-purple-800 transition-all font-medium">
             Get Started
           </button>
         </div>
       </div>
 
-      {/* CARD */}
-      <div className="flex justify-center items-center mt-10 px-4 pb-10">
-        <div className="bg-white w-full max-w-4xl p-10 rounded-3xl shadow-xl border border-gray-100">
+      {/* MAIN CONTENT */}
+      <div className="flex justify-center items-center px-4 py-8 pb-16">
+        <div className="bg-white w-full max-w-4xl p-10 rounded-3xl shadow-2xl border border-gray-100">
           {/* ICON */}
-          <div className="flex justify-center mb-4 text-3xl text-purple-600">
-            🎓
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <span className="text-4xl">🎓</span>
           </div>
 
           {/* TITLE */}
-          <h1 className="text-3xl font-bold text-center mb-2">
+          <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
             Join LearnX
           </h1>
 
-          <p className="text-gray-500 text-center mb-6">
+          <p className="text-gray-500 text-center mb-8">
             Create your account to get started
           </p>
 
           {/* ROLE SWITCH */}
-          <div className="bg-gray-100 rounded-xl flex mb-6 overflow-hidden">
+          <div className="bg-gray-100 rounded-xl flex p-1 mb-6 overflow-hidden max-w-md mx-auto">
             <button
               type="button"
               onClick={() => setRole("student")}
-              className={`flex-1 py-2 transition ${
+              className={`flex-1 py-2.5 rounded-lg transition-all font-semibold ${
                 role === "student"
-                  ? "bg-white shadow text-purple-600 font-medium"
-                  : "text-gray-700"
+                  ? "bg-white shadow-md text-purple-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Student
@@ -101,59 +102,66 @@ export default function Register() {
             <button
               type="button"
               onClick={() => setRole("teacher")}
-              className={`flex-1 py-2 transition ${
+              className={`flex-1 py-2.5 rounded-lg transition-all font-semibold ${
                 role === "teacher"
-                  ? "bg-white shadow text-purple-600 font-medium"
-                  : "text-gray-700"
+                  ? "bg-white shadow-md text-purple-600"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Teacher
             </button>
           </div>
 
+          {/* ERROR */}
           {error && (
-            <div className="mb-5 rounded-xl bg-red-50 text-red-600 px-4 py-3 text-sm">
+            <div className="mb-5 rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm text-center font-medium">
               {error}
             </div>
           )}
 
           {/* FORM */}
           <form onSubmit={handleSubmit}>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-5">
               <div>
-                <label className="text-sm font-medium block">Full Name</label>
+                <label className="text-sm font-semibold block text-gray-700 mb-2">
+                  Full Name
+                </label>
                 <input
                   name="fullName"
                   value={form.fullName}
                   onChange={handleChange}
                   placeholder={role === "teacher" ? "Dr. Jane Smith" : "John Doe"}
-                  className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium block">Email</label>
+                <label className="text-sm font-semibold block text-gray-700 mb-2">
+                  Email Address
+                </label>
                 <input
                   name="email"
                   type="email"
                   value={form.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
-                  className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium block">Password</label>
+                <label className="text-sm font-semibold block text-gray-700 mb-2">
+                  Password
+                </label>
                 <input
                   name="password"
                   type="password"
                   value={form.password}
                   onChange={handleChange}
                   placeholder="Create a strong password"
-                  className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -161,7 +169,7 @@ export default function Register() {
               {role === "student" && (
                 <>
                   <div>
-                    <label className="text-sm font-medium block">
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
                       Grade/Class
                     </label>
                     <input
@@ -169,12 +177,12 @@ export default function Register() {
                       value={form.gradeClass}
                       onChange={handleChange}
                       placeholder="e.g. Grade 10"
-                      className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium block">
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
                       School Name
                     </label>
                     <input
@@ -182,7 +190,7 @@ export default function Register() {
                       value={form.schoolName}
                       onChange={handleChange}
                       placeholder="Your school"
-                      className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </>
@@ -191,18 +199,20 @@ export default function Register() {
               {role === "teacher" && (
                 <>
                   <div>
-                    <label className="text-sm font-medium block">Subject</label>
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
+                      Subject
+                    </label>
                     <input
                       name="subject"
                       value={form.subject}
                       onChange={handleChange}
                       placeholder="e.g. Mathematics"
-                      className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium block">
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
                       Experience (years)
                     </label>
                     <input
@@ -211,12 +221,12 @@ export default function Register() {
                       value={form.experience}
                       onChange={handleChange}
                       placeholder="0"
-                      className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="text-sm font-medium block">
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
                       Institution Name
                     </label>
                     <input
@@ -224,7 +234,7 @@ export default function Register() {
                       value={form.institution}
                       onChange={handleChange}
                       placeholder="Your institution"
-                      className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </>
@@ -234,7 +244,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-6 py-3 rounded-xl bg-purple-600 text-white font-semibold shadow-lg shadow-purple-200 hover:bg-purple-700 transition disabled:opacity-70"
+              className="w-full mt-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-purple-800 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading
                 ? "Creating Account..."
@@ -245,9 +255,12 @@ export default function Register() {
           </form>
 
           {/* FOOTER */}
-          <p className="text-center text-sm mt-6">
+          <p className="text-center text-sm mt-6 text-gray-600">
             Already have an account?{" "}
-            <Link to="/login" className="text-purple-600 font-semibold">
+            <Link
+              to="/login"
+              className="text-purple-600 font-bold hover:text-purple-700 transition-colors"
+            >
               Sign in here
             </Link>
           </p>
