@@ -14,6 +14,7 @@ import StreakSystem from "./pages/student/StreakSystem";
 import Leaderboard from "./pages/student/Leaderboard";
 import TextbookUpload from "./pages/teacher/TextbookUpload";
 import StudentAiTutor from "./pages/student/StudentAiTutor";
+import CurriculumTracker from "./pages/teacher/CurriculumTracker";
 function ProtectedRoute({ children, role }) {
   const { user } = useAuth();
 
@@ -137,7 +138,14 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
+      <Route
+        path="/teacher/curriculum-tracker"
+        element={
+          <ProtectedRoute role="teacher">
+            <CurriculumTracker />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to={user ? `/${user.role}/dashboard` : "/login"} />} />
     </Routes>
     

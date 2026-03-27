@@ -24,11 +24,27 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher"],
       required: true,
     },
+
+    // ✅ Student fields
     gradeClass: {
       type: String,
       default: "",
     },
     schoolName: {
+      type: String,
+      default: "",
+    },
+
+    // ✅ ADD THESE (IMPORTANT)
+    subject: {
+      type: String,
+      default: "",
+    },
+    experience: {
+      type: Number,
+      default: 0,
+    },
+    institutionName: {
       type: String,
       default: "",
     },

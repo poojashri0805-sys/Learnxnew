@@ -15,26 +15,57 @@ const registerUser = async (req, res) => {
       role,
       gradeClass,
       schoolName,
+      subject,
+      experience,
+      institutionName,
     } = req.body;
 
+    // ✅ Common validation
     if (!fullName || !email || !password || !role) {
       return res.status(400).json({ message: "All required fields are missing" });
     }
 
+    // ✅ Role-based validation
+    if (role === "student") {
+      if (!gradeClass || !schoolName) {
+        return res.status(400).json({
+          message: "Student must provide grade and school name",
+        });
+      }
+    }
+
+    if (role === "teacher") {
+      if (!subject || !experience || !institutionName) {
+        return res.status(400).json({
+          message: "Teacher must provide subject, experience, and institution",
+        });
+      }
+    }
+
+    // ✅ Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ Create user (IMPORTANT CHANGE)
     const user = await User.create({
       fullName,
       email,
       password: hashedPassword,
       role,
+
+      // Student fields
       gradeClass: role === "student" ? gradeClass : "",
       schoolName: role === "student" ? schoolName : "",
+
+      // Teacher fields ✅
+      subject: role === "teacher" ? subject : "",
+      experience: role === "teacher" ? Number(experience) : 0,
+      institutionName: role === "teacher" ? institutionName : "",
     });
 
     res.status(201).json({
@@ -45,12 +76,11 @@ const registerUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        gradeClass: user.gradeClass,
-        schoolName: user.schoolName,
       },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error); // 👈 ADD THIS (VERY IMPORTANT FOR DEBUG)
+    res.status(500).json({ message: "Registration failed" });
   }
 };
 
