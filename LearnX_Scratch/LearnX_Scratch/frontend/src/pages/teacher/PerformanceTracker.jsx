@@ -23,9 +23,13 @@ const PerformanceTracker = () => {
         const loadGrades = async () => {
             try {
                 const response = await axios.get("/api/performance/grades");
-                setGrades(response.data);
+                console.log("Grades API response:", response.data);
+                // Ensure grades is always an array
+                const gradesData = Array.isArray(response.data) ? response.data : [];
+                setGrades(gradesData);
             } catch (error) {
                 console.error("Error loading grades:", error);
+                setGrades([]);
             }
         };
 
@@ -242,8 +246,8 @@ const PerformanceTracker = () => {
                             {/* Topic-wise Performance */}
                             <div className="bg-white p-6 rounded-lg shadow">
                                 <h3 className="text-lg font-bold mb-4">📚 Topic-wise Performance</h3>
-                                <div style={{ minHeight: "300px" }}>
-                                    <ResponsiveContainer width="100%" height={300}>
+                                <div style={{ width: "100%", height: "300px", minHeight: "300px" }}>
+                                    <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={selectedGradeData.topicWiseStats}>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="topic" />
@@ -258,8 +262,8 @@ const PerformanceTracker = () => {
                             {/* Prediction Distribution */}
                             <div className="bg-white p-6 rounded-lg shadow">
                                 <h3 className="text-lg font-bold mb-4">📊 Status Distribution</h3>
-                                <div style={{ minHeight: "300px" }}>
-                                    <ResponsiveContainer width="100%" height={300}>
+                                <div style={{ width: "100%", height: "300px", minHeight: "300px" }}>
+                                    <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={[
@@ -449,8 +453,8 @@ const PerformanceTracker = () => {
                             {selectedStudent?.topicPerformance?.length > 0 && (
                                 <div className="mt-4">
                                     <h4 className="font-bold mb-2">Topic-wise Scores:</h4>
-                                    <div style={{ minHeight: "250px" }}>
-                                        <ResponsiveContainer width="100%" height={250}>
+                                    <div style={{ width: "100%", height: "250px", minHeight: "250px" }}>
+                                        <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={selectedStudent.topicPerformance}>
                                                 <CartesianGrid strokeDasharray="3 3" />
                                                 <XAxis dataKey="topic" />
