@@ -16,6 +16,7 @@ import TextbookUpload from "./pages/teacher/TextbookUpload";
 import StudentAiTutor from "./pages/student/StudentAiTutor";
 import PerformanceTracker from "./pages/teacher/PerformanceTracker";
 
+import CurriculumTracker from "./pages/teacher/CurriculumTracker";
 function ProtectedRoute({ children, role }) {
   const { user } = useAuth();
 
@@ -148,6 +149,14 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/teacher/curriculum-tracker"
+        element={
+          <ProtectedRoute role="teacher">
+            <CurriculumTracker />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to={user ? `/${user.role}/dashboard` : "/login"} />} />
     </Routes>
     

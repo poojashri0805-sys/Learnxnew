@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true
     },
+
+    // ✅ Student fields
     gradeClass: {
       type: String,
       default: "",
@@ -45,6 +47,20 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0
     }
+
+    // ✅ ADD THESE (IMPORTANT)
+    subject: {
+      type: String,
+      default: "",
+    },
+    experience: {
+      type: Number,
+      default: 0,
+    },
+    institutionName: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );
