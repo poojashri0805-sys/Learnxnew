@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../api/axios";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import DashboardLayout from "../../components/DashboardLayout";
 
@@ -22,7 +22,7 @@ const PerformanceTracker = () => {
     useEffect(() => {
         const loadGrades = async () => {
             try {
-                const response = await axios.get("/api/performance/grades");
+                const response = await api.get("/performance/grades");
                 console.log("Grades API response:", response.data);
                 // Ensure grades is always an array
                 const gradesData = Array.isArray(response.data) ? response.data : [];
@@ -41,8 +41,8 @@ const PerformanceTracker = () => {
         if (selectedGrade && selectedSubject) {
             const loadDashboard = async () => {
                 try {
-                    const response = await axios.get(
-                        `/api/performance/dashboard/${selectedGrade}/${selectedSubject}`
+                    const response = await api.get(
+                        `/performance/dashboard/${selectedGrade}/${selectedSubject}`
                     );
                     setSelectedGradeData(response.data);
                 } catch (error) {
@@ -68,7 +68,7 @@ const PerformanceTracker = () => {
         formData.append("subject", selectedSubject);
 
         try {
-            const response = await axios.post("/api/performance/upload", formData, {
+            const response = await api.post("/performance/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
@@ -93,8 +93,8 @@ const PerformanceTracker = () => {
                 .map((t) => t.trim())
                 .filter((t) => t);
 
-            await axios.post(
-                `/api/performance/student/${selectedStudent.studentId}/${selectedGrade}/${selectedSubject}/test`,
+            await api.post(
+                `/performance/student/${selectedStudent.studentId}/${selectedGrade}/${selectedSubject}/test`,
                 {
                     testName: newTestData.testName,
                     marksObtained: parseInt(newTestData.marksObtained),
