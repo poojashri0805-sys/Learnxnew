@@ -25,11 +25,19 @@ export default function StudentQuiz() {
             user?.class ||
             "";
 
+        // Get completed quizzes for this student
+        const completedQuizzes =
+            JSON.parse(localStorage.getItem("completedQuizzes")) || {};
+        const studentKey = user?.email || user?.id || "anonymous";
+        const studentCompletedIds = completedQuizzes[studentKey] || [];
+
+        // Filter: only show quizzes for this class that the student hasn't completed
         const filteredQuizzes = allQuizzes.filter(
             (quiz) =>
                 quiz.className &&
                 studentClass &&
-                quiz.className.trim().toLowerCase() === studentClass.trim().toLowerCase()
+                quiz.className.trim().toLowerCase() === studentClass.trim().toLowerCase() &&
+                !studentCompletedIds.includes(quiz.id)
         );
 
         setQuizzes(filteredQuizzes);
@@ -57,6 +65,33 @@ export default function StudentQuiz() {
         });
     };
 
+    // Helper function to check if answer is correct (used for both scoring and display)
+    const isAnswerCorrect = (selected, correctAnswer, options) => {
+        if (!selected || !correctAnswer) return false;
+
+        const selectedValue = selected.trim().toLowerCase();
+        const correctValue = correctAnswer.trim().toLowerCase();
+
+        // Direct text match
+        if (selectedValue === correctValue) return true;
+
+        // Check if correctAnswer is a letter (A-D)
+        if (/^[A-D]$/i.test(correctAnswer.trim())) {
+            const correctLetterIndex = correctAnswer.trim().toUpperCase().charCodeAt(0) - 65;
+            const correctOption = (options?.[correctLetterIndex] || "").trim().toLowerCase();
+            if (selectedValue === correctOption) return true;
+        }
+
+        // Check if selected is a letter and correctAnswer is full text
+        if (/^[A-D]$/i.test(selected.trim())) {
+            const selectedLetterIndex = selected.trim().toUpperCase().charCodeAt(0) - 65;
+            const selectedOption = (options?.[selectedLetterIndex] || "").trim().toLowerCase();
+            if (selectedOption === correctValue) return true;
+        }
+
+        return false;
+    };
+
     const handleNext = () => {
         if (currentQuestion < selectedQuiz.questions.length - 1) {
             setCurrentQuestion((prev) => prev + 1);
@@ -69,30 +104,12 @@ export default function StudentQuiz() {
         }
     };
 
-    const removeSubmittedQuizFromPending = () => {
-        const allQuizzes =
-            JSON.parse(localStorage.getItem("publishedQuizzes")) || [];
-
-        const updatedQuizzes = allQuizzes.filter(
-            (quiz) => quiz.id !== selectedQuiz.id
-        );
-
-        localStorage.setItem("publishedQuizzes", JSON.stringify(updatedQuizzes));
-        setQuizzes(updatedQuizzes);
-    };
-
     const handleSubmit = async () => {
         let marks = 0;
 
         selectedQuiz.questions.forEach((q, index) => {
             const selected = answers[index];
-
-            if (!selected || !q.correctAnswer) return;
-
-            const selectedValue = selected.trim().toLowerCase();
-            const correctValue = q.correctAnswer.trim().toLowerCase();
-
-            if (selectedValue === correctValue) {
+            if (isAnswerCorrect(selected, q.correctAnswer, q.options)) {
                 marks++;
             }
         });
@@ -141,13 +158,25 @@ export default function StudentQuiz() {
             console.log("Quiz result save failed", err);
         }
 
-        removeSubmittedQuizFromPending();
-
         try {
             await api.post("/streak/complete/quiz-attempt");
         } catch (err) {
             console.log("Streak update failed", err);
         }
+
+        // Mark this quiz as completed for this student
+        const completedQuizzes =
+            JSON.parse(localStorage.getItem("completedQuizzes")) || {};
+        const studentKey = user?.email || user?.id || "anonymous";
+        
+        if (!completedQuizzes[studentKey]) {
+            completedQuizzes[studentKey] = [];
+        }
+        completedQuizzes[studentKey].push(selectedQuiz.id);
+        localStorage.setItem("completedQuizzes", JSON.stringify(completedQuizzes));
+
+        // Remove from current view
+        setQuizzes((prev) => prev.filter((quiz) => quiz.id !== selectedQuiz.id));
 
         setScore(marks);
         setSubmitted(true);
@@ -239,13 +268,10 @@ export default function StudentQuiz() {
 
                                     <div className="space-y-2">
                                         {q.options?.map((opt, i) => {
-                                            const isCorrect =
-                                                opt.trim().toLowerCase() ===
-                                                q.correctAnswer?.trim().toLowerCase();
+                                            // Check if this option is the correct one
+                                            const isCorrect = isAnswerCorrect(opt, q.correctAnswer, q.options);
 
-                                            const isSelected =
-                                                answers[index]?.trim().toLowerCase() ===
-                                                opt.trim().toLowerCase();
+                                            const isSelected = isAnswerCorrect(answers[index], opt, q.options);
 
                                             return (
                                                 <div

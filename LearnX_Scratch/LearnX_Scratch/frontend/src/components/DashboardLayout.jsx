@@ -10,6 +10,7 @@ export default function DashboardLayout({ title, children }) {
 
   const fullName = user?.fullName || user?.name || "User";
   const role = user?.role || "student";
+  const studentId = user?.studentId;
 
   const initials = fullName
     .split(" ")
@@ -27,7 +28,7 @@ export default function DashboardLayout({ title, children }) {
           {title || "Dashboard"}
         </h2>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 relative">
           <NotificationBell />
 
           <div
@@ -39,7 +40,14 @@ export default function DashboardLayout({ title, children }) {
             </div>
 
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-slate-900">{fullName}</p>
+              <p className="text-sm font-medium text-slate-900">
+                {fullName}
+                {role === "student" && studentId && (
+                  <span className="ml-2 text-xs text-purple-600">
+                    ({studentId})
+                  </span>
+                )}
+              </p>
               <p className="text-xs text-slate-500 capitalize">{role}</p>
             </div>
           </div>
@@ -49,6 +57,13 @@ export default function DashboardLayout({ title, children }) {
               <div className="px-4 py-3 border-b">
                 <p className="font-medium text-slate-900">{fullName}</p>
                 <p className="text-sm text-slate-500 capitalize">{role}</p>
+
+                {/* 👇 SHOW STUDENT ID ONLY FOR STUDENTS */}
+                {role === "student" && studentId && (
+                  <p className="text-xs text-purple-600 mt-1">
+                    ID: {studentId}
+                  </p>
+                )}
               </div>
 
               <button className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-2">

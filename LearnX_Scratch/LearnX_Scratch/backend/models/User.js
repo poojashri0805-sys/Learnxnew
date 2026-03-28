@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher"],
       required: true,
     },
+    studentId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     gradeClass: {
       type: String,
       default: "",
@@ -32,6 +37,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    quizScore: {
+      type: Number,
+      default: 0
+    },
+    streak: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );

@@ -6,6 +6,7 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
+
 const registerUser = async (req, res) => {
   try {
     const {
@@ -27,12 +28,69 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const { studentId } = req.body;
+
+if (role === "student") {
+  if (!studentId) {
+    return res.status(400).json({ message: "Student ID is required" });
+  }
+
+  let student = await User.findOne({ studentId });
+
+  // ✅ CASE 1: Student exists → update
+  if (student) {
+    student.fullName = fullName;
+    student.email = email;
+    student.password = hashedPassword;
+
+    await student.save();
+
+    return res.status(200).json({
+      message: "Account linked successfully",
+      token: generateToken(student._id),
+      user: {
+        id: student._id,
+        fullName: student.fullName,
+        email: student.email,
+        role: student.role,
+        studentId: student.studentId,
+        gradeClass: student.gradeClass,
+      },
+    });
+  }
+
+  // ✅ CASE 2: Student NOT exists → CREATE
+  student = await User.create({
+    fullName,
+    email,
+    password: hashedPassword,
+    role: "student",
+    studentId,
+    gradeClass,
+    schoolName,
+  });
+
+  return res.status(201).json({
+    message: "Student registered successfully",
+    token: generateToken(student._id),
+    user: {
+      id: student._id,
+      fullName: student.fullName,
+      email: student.email,
+      role: student.role,
+      studentId: student.studentId,
+      gradeClass: student.gradeClass,
+      schoolName: student.schoolName,
+    },
+  });
+}
 
     const user = await User.create({
       fullName,
       email,
       password: hashedPassword,
       role,
+      studentId,
       gradeClass: role === "student" ? gradeClass : "",
       schoolName: role === "student" ? schoolName : "",
     });
@@ -45,6 +103,7 @@ const registerUser = async (req, res) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        studentId: user.studentId,
         gradeClass: user.gradeClass,
         schoolName: user.schoolName,
       },
