@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "teacher"],
       required: true,
     },
+    studentId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
 
     // ✅ Student fields
     gradeClass: {
@@ -34,6 +39,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    quizScore: {
+      type: Number,
+      default: 0
+    },
+    streak: {
+      type: Number,
+      default: 0
+    }
 
     // ✅ ADD THESE (IMPORTANT)
     subject: {

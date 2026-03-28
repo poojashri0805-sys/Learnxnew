@@ -16,6 +16,7 @@ export default function QuizGenerator() {
     const [quizBank, setQuizBank] = useState([]);
     const [subject, setSubject] = useState("");
     const [quizTimer, setQuizTimer] = useState(60);
+    const [viewQuizModal, setViewQuizModal] = useState(null);
 
     // BACKEND - UNCHANGED FROM ORIGINAL
     const handleGenerate = async () => {
@@ -202,6 +203,7 @@ export default function QuizGenerator() {
                                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
                                 >
                                     <option value="">Select class</option>
+                                    <option value="Grade 9">Grade 9</option>
                                     <option value="Grade 10">Grade 10</option>
                                     <option value="Grade 11">Grade 11</option>
                                     <option value="Grade 12">Grade 12</option>
@@ -411,13 +413,14 @@ export default function QuizGenerator() {
                                     <th className="pb-3">Timer</th>
                                     <th className="pb-3">Attempts</th>
                                     <th className="pb-3">Avg Score</th>
+                                    <th className="pb-3">Action</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {quizBank.length === 0 ? (
                                     <tr>
-                                        <td colSpan="8" className="py-6 text-center text-gray-400">
+                                        <td colSpan="9" className="py-6 text-center text-gray-400">
                                             No quizzes sent yet
                                         </td>
                                     </tr>
@@ -444,6 +447,14 @@ export default function QuizGenerator() {
                                                 <td className="py-3">{quiz.timer}s</td>
                                                 <td className="py-3">{attempts}</td>
                                                 <td className="py-3">{avgScore}%</td>
+                                                <td className="py-3">
+                                                    <button
+                                                        onClick={() => setViewQuizModal(quiz)}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                                                    >
+                                                        View
+                                                    </button>
+                                                </td>
                                             </tr>
                                         );
                                     })
@@ -454,6 +465,89 @@ export default function QuizGenerator() {
                 )}
 
             </div>
+
+            {/* VIEW QUIZ MODAL */}
+            {viewQuizModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center">
+                            <h2 className="text-2xl font-bold">{viewQuizModal.topic}</h2>
+                            <button
+                                onClick={() => setViewQuizModal(null)}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-2">
+                            <p className="text-gray-600">
+                                <strong>Subject:</strong> {viewQuizModal.subject}
+                            </p>
+                            <p className="text-gray-600">
+                                <strong>Class:</strong> {viewQuizModal.className}
+                            </p>
+                            <p className="text-gray-600">
+                                <strong>Difficulty:</strong> {viewQuizModal.difficulty}
+                            </p>
+                            <p className="text-gray-600">
+                                <strong>Quiz Type:</strong> {viewQuizModal.type}
+                            </p>
+                        </div>
+
+                        <div className="border-t p-6">
+                            <h3 className="text-xl font-semibold mb-6">Questions</h3>
+                            <div className="space-y-8">
+                                {viewQuizModal.questions?.map((q, index) => (
+                                    <div key={index} className="border-b pb-6 last:border-b-0">
+                                        <h4 className="font-semibold mb-4 text-lg">
+                                            {index + 1}. {q.question}
+                                        </h4>
+
+                                        {q.options && (
+                                            <div className="space-y-3 ml-4">
+                                                {q.options.map((opt, i) => {
+                                                    const optionLetter = String.fromCharCode(65 + i);
+                                                    const isCorrect =
+                                                        q.correctAnswer === opt ||
+                                                        q.correctAnswer === optionLetter ||
+                                                        q.correctAnswer === `${optionLetter}` ||
+                                                        q.correctAnswer === `${optionLetter}. ${opt}` ||
+                                                        q.correctAnswer?.toLowerCase().trim() === opt?.toLowerCase().trim();
+
+                                                    return (
+                                                        <div
+                                                            key={i}
+                                                            className={`border rounded px-4 py-3 transition-colors ${isCorrect
+                                                                    ? "bg-green-100 border-green-500 font-semibold text-green-900"
+                                                                    : "border-gray-300 bg-gray-50"
+                                                                }`}
+                                                        >
+                                                            {optionLetter}. {opt}
+                                                            {isCorrect && (
+                                                                <span className="ml-2 text-green-600 font-bold">✓ Correct</span>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="border-t p-6 flex justify-end gap-3">
+                            <button
+                                onClick={() => setViewQuizModal(null)}
+                                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-medium transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

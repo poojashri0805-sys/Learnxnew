@@ -1,0 +1,11 @@
+studentId,fullName,email,test1_name,test1_marks,test1_total,test1_topics,test2_name,test2_marks,test2_total,test2_topics,attendance,income,feePaid
+ST001,Rajesh Kumar,rajesh@school.com,Quiz 1,18,20,Functions;Vectors,Quiz 2,16,20,Limits;Continuity,90,Middle,Yes
+ST002,Priya Sharma,priya@school.com,Quiz 1,12,20,Functions;Vectors,Quiz 2,14,20,Limits;Continuity,75,High,Yes
+ST003,Arun Patel,arun@school.com,Quiz 1,8,20,Functions;Vectors,Quiz 2,10,20,Limits;Continuity,60,Low,No
+ST004,Siya Verma,siya@school.com,Quiz 1,15,20,Functions;Vectors,Quiz 2,13,20,Limits;Continuity,72,Middle,Yes
+ST005,Vikram Singh,vikram@school.com,Quiz 1,19,20,Functions;Vectors,Quiz 2,18,20,Limits;Continuity,88,High,Yes
+ST006,Anjali Gupta,anjali@school.com,Quiz 1,14,20,Functions;Vectors,Quiz 2,15,20,Limits;Continuity,80,Middle,Yes
+ST007,Rohan Desai,rohan@school.com,Quiz 1,9,20,Functions;Vectors,Quiz 2,11,20,Limits;Continuity,65,Low,No
+ST008,Maya Nair,maya@school.com,Quiz 1,16,20,Functions;Vectors,Quiz 2,17,20,Limits;Continuity,85,High,Yes
+ST009,Arjun Reddy,arjun@school.com,Quiz 1,10,20,Functions;Vectors,Quiz 2,12,20,Limits;Continuity,70,Middle,Yes
+ST010,Neha Singh,neha@school.com,Quiz 1,20,20,Functions;Vectors,Quiz 2,19,20,Limits;Continuity,95,High,Yes

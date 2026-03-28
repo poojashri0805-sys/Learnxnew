@@ -1,14 +1,15 @@
 const Streak = require("../models/Streak");
 const QuizResult = require("../models/QuizResult");
 const StudyPlan = require("../models/StudyPlan");
-
+const Performance = require("../models/Performance");
+const User = require("../models/User");
+const axios = require("axios");
 const ACTIVITY_DEFINITIONS = [
   { key: "daily-study", title: "Daily Study", icon: "📚" },
   { key: "quiz-attempt", title: "Quiz Attempt", icon: "📝" },
   { key: "flashcard-review", title: "Flashcard Review", icon: "🃏" },
   { key: "ai-tutor-session", title: "AI Tutor Session", icon: "🤖" },
 ];
-
 function getTodayKey() {
   try {
     const date = new Date();
@@ -184,13 +185,202 @@ function buildRecentActivity({ activityLog, quizResult }) {
 
   return recentFromLog.slice(0, 5);
 }
+const getGrades = async (req, res) => {
+  try {
+    let grades = await Performance.distinct("grade");
 
-exports.getStudentDashboard = async (req, res) => {
+    // ✅ remove spaces + duplicates
+    grades = [...new Set(grades.map(g => g.trim()))];
+
+    res.json(grades);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const getStudentAnalysis = async (req, res) => {
+  try {
+    const { studentId, subject } = req.params;
+    
+    // 🔥 GET PERFORMANCE DATA (SUBJECT-WISE)
+    const records = await Performance.find({
+      studentId: studentId.trim(),
+      subject: { $regex: new RegExp(`^${subject.trim()}$`, "i") }
+    });
+
+    if (records.length === 0) {
+      return res.json({ message: "No data found" });
+    }
+    
+
+    // 🔥 CALCULATE FEATURES
+    let totalMarks = 0;
+    let totalObtained = 0;
+    let tests = [];
+    let topicMap = {};
+    let attendance = 0;
+
+    records.forEach((r) => {
+      totalMarks += r.totalMarks || 100;
+      totalObtained += r.marksObtained || 0;
+
+      tests.push(r.marksObtained || 0);
+
+      attendance = r.attendance || attendance;
+
+      if (!topicMap[r.topic]) topicMap[r.topic] = [];
+      topicMap[r.topic].push(r.marksObtained || 0);
+    });
+
+    const avgPercentage = (totalObtained / totalMarks) * 100;
+    const testCount = tests.length;
+
+    // 🔥 TREND
+    let trend = 1; // stable
+    if (tests.length >= 2) {
+      if (tests[tests.length - 1] > tests[0]) trend = 2;
+      else if (tests[tests.length - 1] < tests[0]) trend = 0;
+    }
+
+    // 🔥 WEAK TOPICS
+    let weakTopics = 0;
+    for (let topic in topicMap) {
+      const avg =
+        topicMap[topic].reduce((a, b) => a + b, 0) /
+        topicMap[topic].length;
+
+      if (avg < 40) weakTopics++;
+    }
+    
+    // 🔥 CALL ML (ONLY THESE FEATURES)
+    const response = await axios.post("http://localhost:5001/predict", {
+      avgPercentage,
+      attendance,
+      testCount,
+      trend,
+      weakTopics,
+      income: 1,
+      feePaid: 1,
+    });
+
+    // 🔥 GET USER FIRST
+    const user = await User.findOne({ studentId });
+
+    // 🔥 GET QUIZ RESULTS
+    const quizResults = await QuizResult.find({ user: user._id });
+
+    // 🔥 CALCULATE AVG QUIZ SCORE
+    let quizScore = 0;
+
+    if (quizResults.length > 0) {
+      const total = quizResults.reduce((sum, q) => sum + q.percentage, 0);
+      quizScore = total / quizResults.length;
+    }
+
+    // 🔥 STREAK (you already have streak collection)
+    const streak = user?.streak || 0;
+
+    // 🔥 FINAL RESPONSE
+    res.json({
+      studentId,
+      subject,
+      avgPercentage,
+      trend,
+      weakTopics,
+      quizScore,   // ✅ just display
+      streak,      // ✅ just display
+      prediction: response.data.prediction
+    });
+
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const getGradeDashboard = async (req, res) => {
+  res.json({ message: "test working" });
+};
+const getStudentDashboard = async (req, res) => {
+
   try {
     if (!req.user?._id) {
       return res.status(401).json({ message: "Not authorized" });
     }
+    const axios = require("axios");
+    const Performance = require("../models/Performance");
 
+    const getGradeDashboard = async (req, res) => {
+      try {
+        const { grade, subject } = req.params;
+
+        console.log("GRADE:", grade);
+        console.log("SUBJECT:", subject);
+
+        const records = await Performance.find({
+          grade: grade.trim(),
+          subject: { $regex: new RegExp(`^${subject.trim()}$`, "i") }
+        });
+
+        console.log("RECORDS FOUND:", records.length);
+
+        if (records.length === 0) {
+          return res.json([]);
+        }
+
+        const grouped = {};
+
+        records.forEach(r => {
+          if (!grouped[r.studentId]) {
+            grouped[r.studentId] = [];
+          }
+          grouped[r.studentId].push(r);
+        });
+
+        let students = [];
+
+        for (let studentId in grouped) {
+          const data = grouped[studentId];
+
+          let total = 0;
+          let obtained = 0;
+          let attendance = 0;
+
+          data.forEach(d => {
+            total += d.totalMarks || 100;
+            obtained += d.marksObtained || 0;
+            attendance = d.attendance || attendance;
+          });
+
+          const avg = (obtained / total) * 100;
+
+          // 🔥 CALL ML API
+          const ml = await axios.post("http://localhost:5001/predict", {
+            avgPercentage: avg,
+            attendance,
+            testCount: data.length,
+            trend: 1,
+            weakTopics: 1,
+            income: 1,
+            feePaid: 1
+          });
+
+          students.push({
+            studentId,
+            avgPercentage: avg,
+            attendance,
+            prediction: ml.data.prediction,
+            streak: Math.floor(Math.random() * 10),
+            quizScore: Math.floor(Math.random() * 100)
+          });
+        }
+
+        res.json(students);
+
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: err.message });
+      }
+    };
     const userId = req.user._id;
     const todayKey = getTodayKey();
 
@@ -225,6 +415,7 @@ exports.getStudentDashboard = async (req, res) => {
     const todayActivities = activityLog.filter(
       (item) => item?.dateKey === todayKey
     );
+    
 
     const todayCompletedKeys = new Set(
       todayActivities.map((item) => item?.key).filter(Boolean)
@@ -292,4 +483,11 @@ exports.getStudentDashboard = async (req, res) => {
       error: err.message,
     });
   }
+};
+
+module.exports = {
+  getStudentDashboard,
+  getStudentAnalysis,
+  getGrades,
+  getGradeDashboard   // 🔥 MUST BE HERE
 };

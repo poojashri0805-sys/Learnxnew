@@ -19,10 +19,17 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
+    const allowedMimes = [
+        "application/pdf",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/csv"
+    ];
+    
+    if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error("Only PDF files are allowed"), false);
+        cb(new Error("Only PDF, Excel, and CSV files are allowed"), false);
     }
 };
 

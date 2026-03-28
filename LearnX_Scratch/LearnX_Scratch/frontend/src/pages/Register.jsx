@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
+
 export default function Register() {
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({
@@ -39,6 +40,12 @@ export default function Register() {
       });
 
       login(res.data.token, res.data.user);
+
+
+      if (res.data.user.role === "student") {
+        alert(`Your Student ID is: ${res.data.user.studentId}`);
+      }
+
       navigate(`/${res.data.user.role}/dashboard`);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
