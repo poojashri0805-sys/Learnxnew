@@ -142,7 +142,7 @@ export default function Flashcards() {
                 max="20"
                 value={numCards}
                 onChange={(e) => setNumCards(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -205,10 +205,6 @@ export default function Flashcards() {
             <div
               className="w-full max-w-3xl perspective-[1200px]"
               onClick={() => setFlipped((prev) => !prev)}
-<<<<<<< Updated upstream
-              className="w-full max-w-3xl min-h-[260px] rounded-2xl cursor-pointer flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-indigo-600 to-blue-600"
-=======
->>>>>>> Stashed changes
             >
               <div
                 className={`relative w-full min-h-[260px] cursor-pointer transform-gpu transition-transform duration-700 preserve-3d ${

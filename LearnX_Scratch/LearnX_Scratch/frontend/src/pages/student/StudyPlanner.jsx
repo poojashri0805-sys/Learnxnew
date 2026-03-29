@@ -627,11 +627,7 @@ export default function StudyPlanner() {
                 value={subjects}
                 onChange={(e) => setSubjects(e.target.value)}
                 placeholder="Math, Physics"
-<<<<<<< Updated upstream
                 className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-=======
-                className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
->>>>>>> Stashed changes
               />
             </div>
 
@@ -641,11 +637,7 @@ export default function StudyPlanner() {
                 type="date"
                 value={examDate}
                 onChange={(e) => setExamDate(e.target.value)}
-<<<<<<< Updated upstream
                 className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-=======
-                className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
->>>>>>> Stashed changes
               />
             </div>
           </div>
@@ -656,11 +648,7 @@ export default function StudyPlanner() {
               value={topics}
               onChange={(e) => setTopics(e.target.value)}
               placeholder="Enter topics line by line..."
-<<<<<<< Updated upstream
               className="w-full mt-1 px-4 py-3 border rounded-xl min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-=======
-              className="mt-1 min-h-[120px] w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
->>>>>>> Stashed changes
             />
           </div>
 
@@ -685,11 +673,7 @@ export default function StudyPlanner() {
           <button
             onClick={handleGenerate}
             disabled={loading}
-<<<<<<< Updated upstream
             className="mt-5 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-            className="mt-5 rounded-xl bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
->>>>>>> Stashed changes
           >
             {loading
               ? "Generating..."
@@ -700,10 +684,10 @@ export default function StudyPlanner() {
         </div>
 
         {activeSessionMeta && (
-          <div className="rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-white p-4 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <div className="flex items-center gap-2 text-sm font-medium text-violet-700">
+                <div className="flex items-center gap-2 text-sm font-medium text-blue-700">
                   <Sparkles className="h-4 w-4" />
                   Focus session active
                 </div>
@@ -718,13 +702,13 @@ export default function StudyPlanner() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSession((prev) => (prev ? { ...prev, open: true } : prev))}
-                  className="rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 transition hover:bg-violet-50"
+                  className="rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                 >
                   Open Session
                 </button>
                 <button
                   onClick={session.status === "running" ? pauseSession : resumeSession}
-                  className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-700"
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                 >
                   {session.status === "running" ? "Pause" : "Resume"}
                 </button>
@@ -823,22 +807,14 @@ export default function StudyPlanner() {
         )}
 
         {selectedPlan && hasTaskData && (
-<<<<<<< Updated upstream
           <div className="bg-blue-50 border border-blue-200 p-5 rounded-xl">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold text-blue-900">Overall Progress</h3>
               <span className="text-sm font-medium text-blue-700">
-=======
-          <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-semibold text-purple-900">Overall Progress</h3>
-              <span className="text-sm font-medium text-purple-700">
->>>>>>> Stashed changes
                 {progress.done}/{progress.total} tasks
               </span>
             </div>
 
-<<<<<<< Updated upstream
             <p className="text-sm text-blue-700 mb-3">
               {progress.percent}% complete • {progress.total - progress.done} remaining
             </p>
@@ -846,15 +822,6 @@ export default function StudyPlanner() {
             <div className="w-full bg-blue-200 h-3 rounded-full overflow-hidden">
               <div
                 className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-=======
-            <p className="mb-3 text-sm text-purple-700">
-              {progress.percent}% complete • {progress.total - progress.done} remaining
-            </p>
-
-            <div className="h-3 w-full overflow-hidden rounded-full bg-purple-200">
-              <div
-                className="h-3 rounded-full bg-purple-600 transition-all duration-500 ease-out"
->>>>>>> Stashed changes
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
@@ -879,64 +846,18 @@ export default function StudyPlanner() {
                       <p className="font-semibold text-gray-900">{day.day}</p>
                       <p className="mt-1 text-xs text-gray-400">{day.date}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isPastLocalDate(day.date) && dayTasks.some((task) => !task.completed) ? (
-                        <span className="rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700">
-                          Missed
-                        </span>
-                      ) : null}
-                      <span className="rounded border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
-                        {dayDone}/{dayTasks.length}
-                      </span>
-                    </div>
-<<<<<<< Updated upstream
                     <span className="text-xs font-medium border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded">
                       {dayDone}/{dayTasks.length}
                     </span>
-=======
->>>>>>> Stashed changes
                   </div>
 
                   <div className="mb-3 h-1 w-full rounded-full bg-gray-200">
                     <div
-<<<<<<< Updated upstream
                       className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-=======
-                      className="h-1 rounded-full bg-purple-600 transition-all duration-300"
->>>>>>> Stashed changes
                       style={{ width: `${dayProgress}%` }}
                     />
                   </div>
 
-<<<<<<< Updated upstream
-                  <div className="space-y-2">
-                    {dayTasks.map((task, taskIndex) => (
-                      <div
-                        key={taskIndex}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleTask(dayIndex, taskIndex);
-                        }}
-                        className="w-full flex items-start gap-3 text-left group hover:bg-blue-50 p-2 rounded-lg transition-colors cursor-pointer"
-                      >
-                        {task.completed ? (
-                          <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-blue-400 transition-colors" />
-                        )}
-
-                        <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm transition-all duration-200 ${
-                              task.completed
-                                ? "line-through text-gray-400"
-                                : "text-gray-900 group-hover:text-blue-700"
-                            }`}
-                          >
-                            {task.title}
-                          </p>
-=======
                   <div className="space-y-3">
                     {dayTasks.map((task, taskIndex) => {
                       const isSameTask =
@@ -956,9 +877,8 @@ export default function StudyPlanner() {
                         : session && session.status !== "completed"
                         ? "Session Active"
                         : "Start";
->>>>>>> Stashed changes
 
-                      const primaryIcon = task.completed
+                      const PrimaryIcon = task.completed
                         ? CheckCircle2
                         : isSameTask
                         ? session.status === "running"
@@ -980,7 +900,7 @@ export default function StudyPlanner() {
                       return (
                         <div
                           key={taskIndex}
-                          className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:bg-violet-50/60"
+                          className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-3 transition-colors hover:bg-blue-50/60"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
@@ -988,7 +908,7 @@ export default function StudyPlanner() {
                                 className={`text-sm font-medium transition-all ${
                                   task.completed
                                     ? "text-gray-400 line-through"
-                                    : "text-slate-900 group-hover:text-violet-700"
+                                    : "text-slate-900 group-hover:text-blue-700"
                                 }`}
                               >
                                 {task.title}
@@ -1012,7 +932,7 @@ export default function StudyPlanner() {
                                 task.completed
                                   ? "bg-emerald-100 text-emerald-700"
                                   : isSameTask && session?.status === "running"
-                                  ? "bg-violet-100 text-violet-700"
+                                  ? "bg-blue-100 text-blue-700"
                                   : isSameTask && session?.status === "paused"
                                   ? "bg-amber-100 text-amber-700"
                                   : "bg-slate-200 text-slate-600"
@@ -1039,10 +959,10 @@ export default function StudyPlanner() {
                                   ? "cursor-not-allowed bg-slate-200 text-slate-500"
                                   : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-violet-600 text-white hover:bg-violet-700"
+                                  : "bg-blue-600 text-white hover:bg-blue-700"
                               }`}
                             >
-                              {primaryIcon ? <primaryIcon className="h-4 w-4" /> : null}
+                              {PrimaryIcon ? <PrimaryIcon className="h-4 w-4" /> : null}
                               {primaryLabel}
                             </button>
 
@@ -1070,7 +990,7 @@ export default function StudyPlanner() {
                               </div>
                               <div className="h-2 rounded-full bg-slate-200">
                                 <div
-                                  className="h-2 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-emerald-400 transition-all"
+                                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-400 transition-all"
                                   style={{
                                     width: `${Math.max(currentProgress, 6)}%`,
                                   }}
@@ -1091,7 +1011,7 @@ export default function StudyPlanner() {
         <div className="rounded-2xl border bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-sm font-medium text-violet-700">
+              <div className="flex items-center gap-2 text-sm font-medium text-blue-700">
                 <Trees className="h-4 w-4" />
                 Forest
               </div>
@@ -1144,7 +1064,7 @@ export default function StudyPlanner() {
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-violet-500 shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-blue-500 shadow-sm">
                 <Trees className="h-7 w-7" />
               </div>
               <h4 className="mt-4 text-lg font-semibold text-slate-900">
