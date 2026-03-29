@@ -46,11 +46,11 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 w-72 h-screen bg-[#0f172a] text-white border-r border-white/10 flex flex-col z-50">
       <div className="px-5 py-6 border-b border-white/10 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white shadow-md">
+        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
           ✦
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-purple-300">LearnX</h1>
+          <h1 className="text-2xl font-bold text-blue-300">LearnX</h1>
           <p className="text-xs text-slate-400 capitalize">{role} Copilot</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function Sidebar() {
                 [
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] transition",
                   isActive
-                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                     : "text-slate-300 hover:bg-white/5 hover:text-white",
                 ].join(" ")
               }

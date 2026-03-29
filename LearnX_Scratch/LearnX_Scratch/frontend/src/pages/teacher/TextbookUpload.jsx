@@ -132,7 +132,7 @@ export default function TextbookUpload() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium"
+                                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium"
                             >
                                 {loading ? "Uploading..." : "Upload Textbook"}
                             </button>

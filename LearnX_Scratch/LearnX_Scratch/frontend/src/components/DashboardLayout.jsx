@@ -35,7 +35,7 @@ export default function DashboardLayout({ title, children }) {
             onClick={() => setOpen((prev) => !prev)}
             className="flex items-center gap-3 cursor-pointer select-none"
           >
-            <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold">
+            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">
               {initials || "U"}
             </div>
 
@@ -43,7 +43,7 @@ export default function DashboardLayout({ title, children }) {
               <p className="text-sm font-medium text-slate-900">
                 {fullName}
                 {role === "student" && studentId && (
-                  <span className="ml-2 text-xs text-purple-600">
+                  <span className="ml-2 text-xs text-blue-600">
                     ({studentId})
                   </span>
                 )}
@@ -60,7 +60,7 @@ export default function DashboardLayout({ title, children }) {
 
                 {/* 👇 SHOW STUDENT ID ONLY FOR STUDENTS */}
                 {role === "student" && studentId && (
-                  <p className="text-xs text-purple-600 mt-1">
+                  <p className="text-xs text-blue-600 mt-1">
                     ID: {studentId}
                   </p>
                 )}

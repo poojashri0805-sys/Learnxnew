@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Quiz = require("../models/Quiz");
 const QuizResult = require("../models/QuizResult");
 const StudyPlan = require("../models/StudyPlan");
+const Performance = require("../models/Performance");
 const Notification = require("../models/Notification");
 const Streak = require("../models/Streak");
 
@@ -78,13 +79,15 @@ exports.getTeacherDashboard = async (req, res) => {
       plansRaw,
       notificationsRaw,
       streaksRaw,
+      performanceRaw,
     ] = await Promise.all([
       User.find({ role: "student" }).lean(),
-      Quiz.find({}).sort({ createdAt: -1 }).lean(),
+      Quiz.find({ createdBy: req.user._id }).sort({ createdAt: -1 }).lean(),
       QuizResult.find({}).sort({ createdAt: -1 }).lean(),
       StudyPlan.find({}).sort({ createdAt: -1 }).lean(),
       Notification.find({}).sort({ createdAt: -1 }).limit(20).lean(),
       Streak.find({}).lean(),
+      Performance.find({}).lean(),
     ]);
 
     const students = studentsRaw || [];
@@ -93,6 +96,7 @@ exports.getTeacherDashboard = async (req, res) => {
     const plans = plansRaw || [];
     const notifications = notificationsRaw || [];
     const streaks = streaksRaw || [];
+    const performances = performanceRaw || [];
 
     const quizMap = new Map(quizzes.map((q) => [toId(q), q]));
     const streakMap = new Map(
@@ -136,65 +140,60 @@ exports.getTeacherDashboard = async (req, res) => {
       }
     });
 
-    const subjectData = [...resultsBySubject.entries()].map(([name, scores]) => ({
-      name,
-      score: Math.round(average(scores)),
-    }));
+    const subjectData = (() => {
+      const subjectScores = new Map();
 
-    subjectData.sort((a, b) => a.name.localeCompare(b.name));
+      // Collect performanceScore from Performance tracker grouped by subject
+      performances.forEach((perf) => {
+        const subject = perf.subject || "General";
+        if (!subjectScores.has(subject)) {
+          subjectScores.set(subject, []);
+        }
 
-    const allPercents = results.map(extractPercent);
-    const avgClassScore = Math.round(average(allPercents));
+        // Add the pre-calculated performanceScore
+        if (Number.isFinite(Number(perf.performanceScore))) {
+          subjectScores.get(subject).push(Number(perf.performanceScore));
+        }
+      });
 
-    const atRiskStudents = students
-      .map((student) => {
-        const sid = toId(student);
-        const studentResults = resultsByStudent.get(sid) || [];
-        const scores = studentResults.map((r) => r._percent);
-        const avgScore = Math.round(average(scores));
+      // Calculate average for each subject
+      const data = [...subjectScores.entries()]
+        .map(([name, scores]) => ({
+          name,
+          score: scores.length > 0 ? Math.round(average(scores)) : 0,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-        const streakDoc = streakMap.get(sid);
-        const currentStreak =
-          Number(streakDoc?.currentStreak ?? streakDoc?.streak ?? student?.streak ?? 0) || 0;
+      return data;
+    })();
 
-        const assignmentsMissing =
-          Number(student?.assignmentsMissing ?? student?.missingAssignments ?? 0) || 0;
+    const allPercents = performances
+      .map(p => (Number.isFinite(Number(p.performanceScore)) ? Number(p.performanceScore) : 0));
+    const avgClassScore = performances.length > 0 ? Math.round(average(allPercents)) : 0;
 
-        const latestQuiz = studentResults[0];
-        const latestQuizSubject =
-          latestQuiz?.subject ||
-          quizMap.get(toId(latestQuiz?.quizId || latestQuiz?.quiz || latestQuiz?.quizRef))
-            ?.subject ||
-          pickSubjectFromStudent(student);
-
-        const recentLowAttempts = studentResults.slice(0, 3).filter((r) => r._percent < 45).length;
-
-        const reasons = [];
-        if (avgScore > 0 && avgScore < 50) reasons.push("Low quiz scores");
-        if (assignmentsMissing > 0) reasons.push(`Missing ${assignmentsMissing} assignments`);
-        if (currentStreak > 0 && currentStreak < 3) reasons.push(`Streak ${currentStreak}`);
-        if (recentLowAttempts >= 2) reasons.push("Weak prerequisites detected");
-
-        if (!reasons.length) return null;
+    const atRiskStudents = performances
+      .filter((perf) => perf.prediction === "At Risk")
+      .map((perf) => {
+        const subject = perf.subject || "General";
+        const grade = perf.grade || "Unknown";
 
         return {
-          id: sid,
+          id: perf.studentId,
           initials:
-            (student?.name || "Student")
+            (perf.fullName || "Student")
               .split(" ")
               .filter(Boolean)
               .map((n) => n[0])
               .join("")
               .slice(0, 2)
               .toUpperCase() || "S",
-          name: student?.name || "Student",
-          detail: `${latestQuizSubject} • ${reasons[0]}`,
-          score: `${avgScore || 0}%`,
-          reason: reasons.join(" • "),
-          createdAt: student?.createdAt || null,
+          name: perf.fullName || "Student",
+          detail: `${grade} • ${subject}`,
+          score: `${perf.performanceScore || 0}%`,
+          reason: perf.prediction === "At Risk" ? "At Risk - Needs attention" : "",
+          createdAt: perf.createdAt || null,
         };
       })
-      .filter(Boolean)
       .sort((a, b) => Number(a.score) - Number(b.score))
       .slice(0, 7);
 

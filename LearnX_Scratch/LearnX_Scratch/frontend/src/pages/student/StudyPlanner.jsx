@@ -283,7 +283,7 @@ export default function StudyPlanner() {
                 value={subjects}
                 onChange={(e) => setSubjects(e.target.value)}
                 placeholder="Math, Physics"
-                className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -293,7 +293,7 @@ export default function StudyPlanner() {
                 type="date"
                 value={examDate}
                 onChange={(e) => setExamDate(e.target.value)}
-                className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full mt-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function StudyPlanner() {
               value={topics}
               onChange={(e) => setTopics(e.target.value)}
               placeholder="Enter topics line by line..."
-              className="w-full mt-1 px-4 py-3 border rounded-xl min-h-[120px] focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full mt-1 px-4 py-3 border rounded-xl min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -331,7 +331,7 @@ export default function StudyPlanner() {
           <button
             onClick={handleGenerate}
             disabled={loading}
-            className="mt-5 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-5 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
               ? "Generating..."
@@ -346,7 +346,7 @@ export default function StudyPlanner() {
             onClick={() => setActiveTab("active")}
             className={`px-4 py-2 rounded-xl transition-colors ${
               activeTab === "active"
-                ? "bg-purple-600 text-white"
+                ? "bg-blue-600 text-white"
                 : "bg-gray-200 hover:bg-gray-300"
             }`}
           >
@@ -357,7 +357,7 @@ export default function StudyPlanner() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-xl transition-colors ${
               activeTab === "completed"
-                ? "bg-purple-600 text-white"
+                ? "bg-blue-600 text-white"
                 : "bg-gray-200 hover:bg-gray-300"
             }`}
           >
@@ -382,7 +382,7 @@ export default function StudyPlanner() {
                 }}
                 className={`px-4 py-2 rounded-xl border transition-colors ${
                   selectedPlan?._id === plan._id
-                    ? "bg-purple-600 text-white"
+                    ? "bg-blue-600 text-white"
                     : "bg-white hover:bg-gray-50"
                 }`}
               >
@@ -401,21 +401,21 @@ export default function StudyPlanner() {
         )}
 
         {selectedPlan && hasTaskData && (
-          <div className="bg-purple-50 border border-purple-200 p-5 rounded-xl">
+          <div className="bg-blue-50 border border-blue-200 p-5 rounded-xl">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-purple-900">Overall Progress</h3>
-              <span className="text-sm font-medium text-purple-700">
+              <h3 className="font-semibold text-blue-900">Overall Progress</h3>
+              <span className="text-sm font-medium text-blue-700">
                 {progress.done}/{progress.total} tasks
               </span>
             </div>
 
-            <p className="text-sm text-purple-700 mb-3">
+            <p className="text-sm text-blue-700 mb-3">
               {progress.percent}% complete • {progress.total - progress.done} remaining
             </p>
 
-            <div className="w-full bg-purple-200 h-3 rounded-full overflow-hidden">
+            <div className="w-full bg-blue-200 h-3 rounded-full overflow-hidden">
               <div
-                className="bg-purple-600 h-3 rounded-full transition-all duration-500 ease-out"
+                className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
@@ -436,14 +436,14 @@ export default function StudyPlanner() {
                       <p className="font-semibold text-gray-900">{day.day}</p>
                       <p className="text-xs text-gray-400 mt-1">{day.date}</p>
                     </div>
-                    <span className="text-xs font-medium border border-purple-200 bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                    <span className="text-xs font-medium border border-blue-200 bg-blue-50 text-blue-700 px-2 py-1 rounded">
                       {dayDone}/{dayTasks.length}
                     </span>
                   </div>
 
                   <div className="w-full bg-gray-200 h-1 rounded-full mb-3">
                     <div
-                      className="bg-purple-600 h-1 rounded-full transition-all duration-300"
+                      className="bg-blue-600 h-1 rounded-full transition-all duration-300"
                       style={{ width: `${dayProgress}%` }}
                     />
                   </div>
@@ -457,12 +457,12 @@ export default function StudyPlanner() {
                           e.stopPropagation();
                           toggleTask(dayIndex, taskIndex);
                         }}
-                        className="w-full flex items-start gap-3 text-left group hover:bg-purple-50 p-2 rounded-lg transition-colors cursor-pointer"
+                        className="w-full flex items-start gap-3 text-left group hover:bg-blue-50 p-2 rounded-lg transition-colors cursor-pointer"
                       >
                         {task.completed ? (
                           <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                         ) : (
-                          <Circle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-purple-400 transition-colors" />
+                          <Circle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-blue-400 transition-colors" />
                         )}
 
                         <div className="flex-1 min-w-0">
@@ -470,7 +470,7 @@ export default function StudyPlanner() {
                             className={`text-sm transition-all duration-200 ${
                               task.completed
                                 ? "line-through text-gray-400"
-                                : "text-gray-900 group-hover:text-purple-700"
+                                : "text-gray-900 group-hover:text-blue-700"
                             }`}
                           >
                             {task.title}

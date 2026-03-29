@@ -160,9 +160,9 @@ export default function StudentDashboard() {
         value: `#${data?.leaderboardRank || 0}`,
         icon: Trophy,
         trend: "Among all students",
-        bg: "bg-violet-50",
-        iconBg: "bg-violet-100",
-        iconColor: "text-violet-600",
+        bg: "bg-blue-50",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
       },
       {
         label: "Total Points",
@@ -215,8 +215,8 @@ export default function StudentDashboard() {
     {
       title: "Leaderboard",
       icon: Trophy,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
       path: "/student/leaderboard",
     },
   ];

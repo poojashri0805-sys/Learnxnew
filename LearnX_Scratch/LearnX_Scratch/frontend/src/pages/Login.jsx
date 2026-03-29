@@ -44,21 +44,23 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
       {/* NAVBAR */}
       <div className="flex justify-between items-center px-8 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 text-purple-600 font-bold text-2xl">
+        <div className="flex items-center gap-2 text-blue-600 font-bold text-2xl">
           <span className="text-3xl">🎓</span>
           <span>LearnX</span>
         </div>
 
         <div className="flex gap-3">
-          <button className="px-6 py-2.5 rounded-xl border-2 border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-purple-200 transition-all font-medium text-gray-700">
+          <button
+            className="px-6 py-2.5 rounded-xl border-2 border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all font-medium text-gray-700"
+          >
             Login
           </button>
           <Link
             to="/register"
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-purple-800 transition-all font-medium"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all font-medium"
           >
             Get Started
           </Link>
@@ -69,7 +71,7 @@ export default function Login() {
       <div className="flex justify-center items-center px-4 py-8">
         <div className="bg-white w-full max-w-md p-10 rounded-3xl shadow-2xl border border-gray-100">
           {/* ICON */}
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <span className="text-4xl">🎓</span>
           </div>
 
@@ -95,7 +97,7 @@ export default function Login() {
               onClick={() => setRole("student")}
               className={`flex-1 py-2.5 rounded-lg transition-all font-semibold ${
                 role === "student"
-                  ? "bg-white shadow-md text-purple-600"
+                  ? "bg-white shadow-md text-blue-600"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -105,7 +107,7 @@ export default function Login() {
               onClick={() => setRole("teacher")}
               className={`flex-1 py-2.5 rounded-lg transition-all font-semibold ${
                 role === "teacher"
-                  ? "bg-white shadow-md text-purple-600"
+                  ? "bg-white shadow-md text-blue-600"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -125,7 +127,7 @@ export default function Login() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="your.email@example.com"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -140,7 +142,7 @@ export default function Login() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 required
               />
             </div>
@@ -148,7 +150,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-purple-800 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>
@@ -159,7 +161,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="text-purple-600 font-bold hover:text-purple-700 transition-colors"
+              className="text-blue-600 font-bold hover:text-blue-700 transition-colors"
             >
               Register here
             </Link>
