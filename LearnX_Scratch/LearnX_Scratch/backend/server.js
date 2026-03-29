@@ -29,6 +29,7 @@ app.use("/api/streak", require("./routes/streakRoutes"));// alias for compatibil
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/student/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/quiz-results", require("./routes/quizRoutes"));
+app.use("/api/quizzes", require("./routes/quizzesRoutes"));
 app.use("/api/leaderboard", require("./routes/leaderboardRoutes"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/textbooks", require("./routes/textbookRoutes"));

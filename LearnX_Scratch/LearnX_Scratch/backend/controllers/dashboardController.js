@@ -439,15 +439,16 @@ const getStudentDashboard = async (req, res) => {
       ? Math.round((todayPlanDone / todayPlan.length) * 100)
       : Math.min(100, Math.round((todayActivities.length / 3) * 100));
 
+    const flashcardsReviewed = activityLog.filter(
+      (item) => item?.key === "flashcard-review"
+    ).length;
     const flashcardsDue = Math.max(0, 24 - flashcardReviewsToday);
 
     const achievements = buildAchievements({
       currentStreak,
       quizScore,
       totalPoints,
-      flashcardsReviewed: activityLog.filter(
-        (item) => item?.key === "flashcard-review"
-      ).length,
+      flashcardsReviewed,
     });
 
     const badgesEarned = achievements.filter((item) => item.unlocked).length;
@@ -461,6 +462,7 @@ const getStudentDashboard = async (req, res) => {
       studentName: req.user?.fullName || req.user?.name || "Student",
       currentStreak,
       flashcardsDue,
+      flashcardsReviewed,
       studyProgress,
       leaderboardRank: rank,
       totalPoints,

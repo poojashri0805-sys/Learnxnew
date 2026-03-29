@@ -1,37 +1,58 @@
 const User = require("../models/User");
 const Streak = require("../models/Streak");
-const Quiz = require("../models/Quiz");
+const QuizResult = require("../models/QuizResult");
 
 exports.getLeaderboard = async (req, res) => {
   try {
-    const { period = "week", subject = "all", sortBy = "points" } = req.query;
+    const { sortBy = "points", grade } = req.query;
 
-    const users = await User.find({ role: "student" }).select("fullName");
+    const userFilter = { role: "student" };
 
-    const leaderboard = [];
+    if (req.user?.role === "student") {
+      userFilter.gradeClass = req.user.gradeClass || "Grade 10";
+    } else if (grade) {
+      userFilter.gradeClass = grade;
+    }
 
-    for (let user of users) {
-      const streak = await Streak.findOne({ user: user._id });
+    const users = await User.find(userFilter).select("fullName gradeClass");
 
-      const quizAttempts = await Quiz.find({ user: user._id });
+    const userIds = users.map((u) => u._id);
+    const streaks = await Streak.find({ user: { $in: userIds } }).lean();
+    const quizResults = await QuizResult.find({ user: { $in: userIds } }).lean();
 
-      const avgScore =
-        quizAttempts.length > 0
-          ? Math.round(
-              quizAttempts.reduce((a, b) => a + b.score, 0) /
-                quizAttempts.length
-            )
-          : 0;
+    const streakMap = streaks.reduce((map, item) => {
+      map[item.user.toString()] = item;
+      return map;
+    }, {});
 
-      leaderboard.push({
+    const quizMap = quizResults.reduce((map, quiz) => {
+      const id = quiz.user.toString();
+      if (!map[id]) map[id] = { total: 0, count: 0 };
+      const quizScore = Number(
+        quiz.percentage ??
+          (quiz.total > 0 ? (quiz.score / quiz.total) * 100 : 0)
+      ) || 0;
+      map[id].total += quizScore;
+      map[id].count += 1;
+      return map;
+    }, {});
+
+    const leaderboard = users.map((user) => {
+      const streak = streakMap[user._id.toString()];
+      const userQuizzes = quizMap[user._id.toString()] || { total: 0, count: 0 };
+      const avgScore = userQuizzes.count
+        ? Math.round(userQuizzes.total / userQuizzes.count)
+        : 0;
+
+      return {
         userId: user._id,
         name: user.fullName,
+        gradeClass: user.gradeClass || "Unknown",
         points: streak?.totalPoints || 0,
         streak: streak?.currentStreak || 0,
         quizScore: avgScore,
-        speed: Math.floor(Math.random() * 40) + 60, // mock speed
-      });
-    }
+      };
+    });
 
     // SORTING
     leaderboard.sort((a, b) => {

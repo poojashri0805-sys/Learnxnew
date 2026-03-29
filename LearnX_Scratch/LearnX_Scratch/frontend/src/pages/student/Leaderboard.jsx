@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { useAuth } from "../../context/AuthContext";
 import useLeaderboard from "../../hooks/useLeaderboard";
 
 const SORTS = ["Total Points", "Quiz Score", "Streak"];
+const GRADES = ["Grade 10", "Grade 11", "Grade 12"];
 
 function getInitials(name = "") {
   return name
@@ -44,18 +45,38 @@ export default function StudentLeaderboard() {
   const { user } = useAuth();
 
   const [sortBy, setSortBy] = useState("Total Points");
-
-  const params = useMemo(
-    () => ({
-      sortBy:
-        sortBy === "Total Points"
-          ? "points"
-          : sortBy === "Quiz Score"
-          ? "quiz"
-          : "streak",
-    }),
-    [sortBy]
+  const [selectedGrade, setSelectedGrade] = useState(
+    user?.role === "student" ? user?.gradeClass || "Grade 10" : "Grade 10"
   );
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === "student") {
+      setSelectedGrade(user.gradeClass || "Grade 10");
+    } else if (!GRADES.includes(selectedGrade)) {
+      setSelectedGrade("Grade 10");
+    }
+  }, [user]);
+
+  const isTeacher = user?.role === "teacher";
+
+  const params = useMemo(() => {
+    const sortKey =
+      sortBy === "Total Points"
+        ? "points"
+        : sortBy === "Quiz Score"
+        ? "quiz"
+        : "streak";
+
+    const query = { sortBy: sortKey };
+    if (isTeacher) {
+      query.grade = selectedGrade;
+    } else if (user?.gradeClass) {
+      query.grade = user.gradeClass;
+    }
+
+    return query;
+  }, [sortBy, selectedGrade, isTeacher, user?.gradeClass]);
 
   const { leaderboard = [], top3 = [], loading } = useLeaderboard(params);
 
@@ -108,7 +129,7 @@ export default function StudentLeaderboard() {
           })}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="text-slate-500 text-sm flex items-center gap-2">
             <span>☆</span>
             <span>Sort by:</span>
@@ -127,6 +148,27 @@ export default function StudentLeaderboard() {
               {item}
             </button>
           ))}
+
+          {isTeacher ? (
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
+              <span>Grade</span>
+              <select
+                value={selectedGrade}
+                onChange={(e) => setSelectedGrade(e.target.value)}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm outline-none"
+              >
+                {GRADES.map((grade) => (
+                  <option key={grade} value={grade}>
+                    {grade}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : user?.gradeClass ? (
+            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+              Grade {user.gradeClass}
+            </div>
+          ) : null}
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -135,6 +177,7 @@ export default function StudentLeaderboard() {
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">Rank</th>
                 <th className="text-left px-4 py-3 font-semibold">Student</th>
+                <th className="text-left px-4 py-3 font-semibold">Grade</th>
                 <th className="text-left px-4 py-3 font-semibold">Quiz Score</th>
                 <th className="text-left px-4 py-3 font-semibold">Streak</th>
                 <th className="text-left px-4 py-3 font-semibold">Total Points</th>
@@ -186,6 +229,10 @@ export default function StudentLeaderboard() {
                             </div>
                           </div>
                         </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-600">
+                        {student.gradeClass || student.grade || "-"}
                       </td>
 
                       <td className="px-4 py-3 font-semibold text-slate-900">
