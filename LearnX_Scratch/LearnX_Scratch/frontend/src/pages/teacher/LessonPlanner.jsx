@@ -415,23 +415,67 @@ export default function LessonPlanner() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                                 <h3 className="text-xl font-semibold mb-4">Revision & Buffer</h3>
-                                <div className="space-y-4">
-                                    <div className="border rounded-xl p-4">
-                                        <p className="font-semibold mb-1">Revision Plan</p>
-                                        <p className="text-sm text-gray-700">
-                                            {generatedPlan.revisionPlan?.day} - {generatedPlan.revisionPlan?.focus}
+                                <div className="space-y-6">
+                                    {/* Revision Plan */}
+                                    <div className="border-l-4 border-blue-500 pl-4">
+                                        <h4 className="font-semibold text-blue-700 mb-2">📚 Revision Plan</h4>
+                                        <p className="text-sm text-gray-600 mb-3">
+                                            {generatedPlan.revisionPlan?.overview || "Comprehensive review of all topics"}
+                                        </p>
+                                        <div className="bg-blue-50 rounded p-3 mb-3">
+                                            <p className="text-xs font-semibold text-blue-900 mb-2">Review Strategy:</p>
+                                            <p className="text-sm text-gray-700">{generatedPlan.revisionPlan?.reviewStrategy}</p>
+                                        </div>
+                                        {generatedPlan.revisionPlan?.topicsToReview && generatedPlan.revisionPlan.topicsToReview.length > 0 && (
+                                            <div className="mb-3">
+                                                <p className="text-xs font-semibold text-gray-700 mb-2">Topics to Review:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {generatedPlan.revisionPlan.topicsToReview.map((topic, idx) => (
+                                                        <span key={idx} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                                            {topic}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-gray-600">
+                                            <span className="font-semibold">Time Required:</span> {generatedPlan.revisionPlan?.timeRequired}
                                         </p>
                                     </div>
 
-                                    <div className="border rounded-xl p-4">
-                                        <p className="font-semibold mb-1">Buffer Plan</p>
-                                        <p className="text-sm text-gray-700">
-                                            {generatedPlan.bufferPlan?.day} - {generatedPlan.bufferPlan?.focus}
+                                    {/* Buffer Plan */}
+                                    <div className="border-l-4 border-amber-500 pl-4">
+                                        <h4 className="font-semibold text-amber-700 mb-2">⚡ Buffer Plan (If Falling Behind)</h4>
+                                        <p className="text-sm text-gray-600 mb-3">
+                                            {generatedPlan.bufferPlan?.overview || "Compressed alternative plan"}
+                                        </p>
+                                        <div className="bg-amber-50 rounded p-3 mb-3">
+                                            <p className="text-xs font-semibold text-amber-900 mb-2">Compressed Strategy:</p>
+                                            <p className="text-sm text-gray-700">{generatedPlan.bufferPlan?.compressedStrategy}</p>
+                                        </div>
+                                        {generatedPlan.bufferPlan?.prioritizedTopics && generatedPlan.bufferPlan.prioritizedTopics.length > 0 && (
+                                            <div className="mb-3">
+                                                <p className="text-xs font-semibold text-gray-700 mb-2">Prioritized Topics:</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {generatedPlan.bufferPlan.prioritizedTopics.map((topic, idx) => (
+                                                        <span key={idx} className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded">
+                                                            {topic}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-gray-600 mb-3">
+                                            <span className="font-semibold">Timeframe:</span> {generatedPlan.bufferPlan?.timeframe}
+                                        </p>
+                                        <p className="text-xs text-gray-600">
+                                            <span className="font-semibold">Alternative Activities:</span> {generatedPlan.bufferPlan?.alternativeActivities}
                                         </p>
                                     </div>
 
-                                    <div className="border rounded-xl p-4">
-                                        <p className="font-semibold mb-1">Fallback Plan</p>
+                                    {/* Fallback Plan */}
+                                    <div className="border-l-4 border-gray-400 pl-4">
+                                        <h4 className="font-semibold text-gray-700 mb-2">🔄 Fallback Plan</h4>
                                         <p className="text-sm text-gray-700">{generatedPlan.fallbackPlan}</p>
                                     </div>
                                 </div>
