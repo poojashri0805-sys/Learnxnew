@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema(
     streak: {
       type: Number,
       default: 0
-    }
+    },
 
     // ✅ ADD THESE (IMPORTANT)
     subject: {

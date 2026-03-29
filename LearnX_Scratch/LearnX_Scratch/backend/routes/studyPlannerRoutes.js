@@ -1,24 +1,21 @@
 const express = require("express");
 const router = express.Router();
-
-const {
-  getPlans,
-  updateTask,
-  deletePlan,
-} = require("../controllers/studyPlannerController");
-
-const {
-  generateAIPlan,
-  updateAIPlan,
-} = require("../controllers/studyPlannerAIController");
-
 const protect = require("../middleware/authMiddleware");
 
-router.post("/generate", protect, generateAIPlan);
-router.put("/:id", protect, updateAIPlan);
+const {
+  getStudyPlans,
+  generateStudyPlan,
+  updateStudyPlan,
+  deleteStudyPlan,
+  completeTask,
+  endSessionAndPlantTree,
+} = require("../controllers/studyPlannerController");
 
-router.get("/", protect, getPlans);
-router.put("/task", protect, updateTask);
-router.delete("/:id", protect, deletePlan);
+router.get("/", protect, getStudyPlans);
+router.post("/generate", protect, generateStudyPlan);
+router.put("/task", protect, completeTask);
+router.post("/session/end", protect, endSessionAndPlantTree);
+router.put("/:id", protect, updateStudyPlan);
+router.delete("/:id", protect, deleteStudyPlan);
 
 module.exports = router;

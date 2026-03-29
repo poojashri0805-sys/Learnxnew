@@ -160,6 +160,7 @@ export default function StudentQuiz() {
 
         try {
             await api.post("/streak/complete/quiz-attempt");
+        window.dispatchEvent(new Event("notification-refresh"));
         } catch (err) {
             console.log("Streak update failed", err);
         }

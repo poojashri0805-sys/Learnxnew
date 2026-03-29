@@ -1,0 +1,978 @@
+diff --cc LearnX_Scratch/LearnX_Scratch/backend/server.js
+index 6721723,ff26fa0..0000000
+--- a/LearnX_Scratch/LearnX_Scratch/backend/server.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/server.js
+@@@ -3,9 -3,6 +3,11 @@@ require("dotenv").config({ path: path.r
+  const express = require("express");
+  const cors = require("cors");
+  const connectDB = require("./config/db");
+ +const teacherRoutes = require("./routes/teacherRoutes");
+ +const dashboardRoutes = require("./routes/dashboardRoutes");
+++const performanceRoutes = require("./routes/performanceRoutes");
+++const forestRoutes = require("./routes/forestRoutes");
+ +
+  
+  const app = express();
+  
+@@@ -32,8 -29,7 +34,9 @@@ app.use("/uploads", express.static(path
+  app.use("/api/textbooks", require("./routes/textbookRoutes"));
+  app.use("/api/chatbot", require("./routes/chatbotRoutes"));
+  app.use("/api/teacher", require("./routes/teacherDashboardRoutes"));
+- app.use("/api/performance", require("./routes/performanceRoutes"));
+ -app.use("/api/forest", require("./routes/forestRoutes"));
+++app.use("/api/performance", performanceRoutes);
+ +app.use("/api/dashboard", dashboardRoutes);
+++app.use("/api/forest", forestRoutes);
+  app.get("/", (req, res) => {
+    res.send("LearnX API is running");
+  });
+diff --cc LearnX_Scratch/LearnX_Scratch/frontend/package.json
+index d94c8e9,0455b16..0000000
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/package.json
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/package.json
+@@@ -10,10 -10,9 +10,11 @@@
+      "preview": "vite preview"
+    },
+    "dependencies": {
+ +    "chart.js": "^4.5.1",
++     "framer-motion": "^12.38.0",
+      "lucide-react": "^0.577.0",
+      "react": "^19.2.4",
+ +    "react-chartjs-2": "^5.3.1",
+      "react-dom": "^19.2.4",
+      "react-router-dom": "^7.13.1",
+      "recharts": "^3.8.1"
+diff --git a/LearnX_Scratch/LearnX_Scratch/backend/controllers/quizResultController.js b/LearnX_Scratch/LearnX_Scratch/backend/controllers/quizResultController.js
+index 4d4bc75..0facb3e 100644
+--- a/LearnX_Scratch/LearnX_Scratch/backend/controllers/quizResultController.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/controllers/quizResultController.js
+@@ -1,4 +1,5 @@
+ const QuizResult = require("../models/QuizResult");
++const createNotification = require("../utils/createNotification");
+ 
+ exports.createQuizResult = async (req, res) => {
+   try {
+@@ -37,6 +38,14 @@ exports.createQuizResult = async (req, res) => {
+       submittedAt: submittedAt ? new Date(submittedAt) : new Date(),
+     });
+ 
++    await createNotification({
++      user: req.user._id,
++      type: "quiz",
++      title: "Quiz submitted",
++      message: `You completed "${quizTitle || 'a quiz'}" with ${percentage}% score.`,
++      link: "/quiz",
++    });
++
+     res.status(201).json(result);
+   } catch (err) {
+     console.error("createQuizResult error:", err);
+diff --git a/LearnX_Scratch/LearnX_Scratch/backend/controllers/streakController.js b/LearnX_Scratch/LearnX_Scratch/backend/controllers/streakController.js
+index 6847c57..4b2f9f7 100644
+--- a/LearnX_Scratch/LearnX_Scratch/backend/controllers/streakController.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/controllers/streakController.js
+@@ -1,4 +1,6 @@
+ const Streak = require("../models/Streak");
++const Notification = require("../models/Notification");
++const createNotification = require("../utils/createNotification");
+ 
+ const ACTIVITY_DEFINITIONS = [
+   {
+@@ -148,6 +150,44 @@ function buildActivityCounts(activityLog) {
+   return counts;
+ }
+ 
++function hasRecentNotification(userId, title, windowMs = 12 * 60 * 60 * 1000) {
++  if (!userId || !title) return false;
++  return Notification.exists({
++    user: userId,
++    title,
++    read: false,
++    createdAt: { $gte: new Date(Date.now() - windowMs) },
++  });
++}
++
++async function notifyStreakExpiry(userId, streak) {
++  const todayKey = getTodayKey();
++  const yesterdayKey = shiftDateKey(todayKey, -1);
++
++  const hasActivityToday =
++    Array.isArray(streak.activityLog) &&
++    streak.activityLog.some((item) => item.dateKey === todayKey);
++
++  if (
++    streak &&
++    streak.lastActiveDateKey === yesterdayKey &&
++    !hasActivityToday
++  ) {
++    const title = "Streak at risk";
++    const message = `Your ${streak.currentStreak}-day streak could expire today. Complete one activity to keep it alive.`;
++    const alreadyNotified = await hasRecentNotification(userId, title, 24 * 60 * 60 * 1000);
++    if (!alreadyNotified) {
++      await createNotification({
++        user: userId,
++        type: "streak",
++        title,
++        message,
++        link: "/streak-system",
++      });
++    }
++  }
++}
++
+ function buildAchievements(streak, activityCounts) {
+   const currentStreakVal = streak?.currentStreak || 0;
+   const totalPointsVal = streak?.totalPoints || 0;
+@@ -310,6 +350,8 @@ exports.getStreakDashboard = async (req, res) => {
+       streak.lastActiveDateKey = null;
+     }
+ 
++    await notifyStreakExpiry(userId, streak);
++
+     let payload;
+     try {
+       payload = buildDashboardPayload(streak);
+@@ -363,6 +405,8 @@ exports.completeActivity = async (req, res) => {
+       (item) => item.dateKey === todayKey && item.key === activityKey
+     );
+ 
++    const previousStreak = streak.currentStreak || 0;
++
+     if (!alreadyDoneToday) {
+       streak.activityLog.push({
+         key: activity.key,
+@@ -378,7 +422,7 @@ exports.completeActivity = async (req, res) => {
+         (item) => item.dateKey === todayKey
+       ).length;
+ 
+-      if (todayActivities >= 3) {
++      if (todayActivities >= 1) {
+         if (streak.lastActiveDateKey === todayKey) {
+           // already counted today
+         } else if (streak.lastActiveDateKey === yesterdayKey) {
+@@ -395,6 +439,14 @@ exports.completeActivity = async (req, res) => {
+       }
+ 
+       await streak.save();
++
++      await createNotification({
++        user: req.user._id,
++        type: "streak",
++        title: "Streak updated",
++        message: `Nice work! You completed ${activity.title}, earned ${activity.points} points, and your streak is now ${streak.currentStreak} day${streak.currentStreak === 1 ? "" : "s"}.`,
++        link: "/leaderboard",
++      });
+     }
+ 
+     const fresh = await Streak.findById(streak._id);
+diff --git a/LearnX_Scratch/LearnX_Scratch/backend/controllers/studyPlannerController.js b/LearnX_Scratch/LearnX_Scratch/backend/controllers/studyPlannerController.js
+index b802801..e4b98d9 100644
+--- a/LearnX_Scratch/LearnX_Scratch/backend/controllers/studyPlannerController.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/controllers/studyPlannerController.js
+@@ -1,5 +1,6 @@
+ const StudyPlan = require("../models/StudyPlan");
+ const ForestTree = require("../models/ForestTree");
++const createNotification = require("../utils/createNotification");
+ 
+ function clamp(n, min = 0, max = 1) {
+   return Math.max(min, Math.min(max, n));
+@@ -22,24 +23,41 @@ function splitSubjects(value) {
+   return list.length ? list : ["Study"];
+ }
+ 
++function parseLocalDate(value) {
++  if (value instanceof Date) {
++    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
++  }
++
++  const text = String(value || "").trim();
++  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
++  if (match) {
++    const [, year, month, day] = match;
++    return new Date(Number(year), Number(month) - 1, Number(day));
++  }
++
++  const parsed = new Date(text);
++  if (Number.isNaN(parsed.getTime())) return null;
++  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
++}
++
+ function formatDateISO(date) {
+-  const d = new Date(date);
+-  return d.toISOString().slice(0, 10);
++  const d = parseLocalDate(date) || new Date();
++  const yyyy = d.getFullYear();
++  const mm = String(d.getMonth() + 1).padStart(2, "0");
++  const dd = String(d.getDate()).padStart(2, "0");
++  return `${yyyy}-${mm}-${dd}`;
+ }
+ 
+ function addDays(date, days) {
+-  const next = new Date(date);
++  const next = parseLocalDate(date) || new Date();
+   next.setDate(next.getDate() + days);
+   return next;
+ }
+ 
+ function daysUntilExam(examDate) {
+-  const today = new Date();
+-  today.setHours(0, 0, 0, 0);
+-
+-  const exam = new Date(examDate);
+-  if (Number.isNaN(exam.getTime())) return 1;
+-  exam.setHours(0, 0, 0, 0);
++  const today = parseLocalDate(new Date());
++  const exam = parseLocalDate(examDate);
++  if (!exam) return 1;
+ 
+   const diff = Math.ceil((exam - today) / 86400000);
+   return Math.max(1, diff + 1);
+@@ -51,6 +69,31 @@ function getTreeSizeFromMinutes(minutes) {
+   return "small";
+ }
+ 
++function getSuggestedDuration(task, minutesPerDay) {
++  if (!task || typeof task !== "object") return Math.min(60, minutesPerDay);
++  if (task.type === "final") return Math.min(120, minutesPerDay);
++
++  const suggested = {
++    easy: 90,
++    medium: 120,
++    hard: 150,
++  }[task.difficulty || "medium"];
++
++  const minDuration = {
++    easy: 60,
++    medium: 80,
++    hard: 100,
++  }[task.difficulty || "medium"];
++
++  const maxDuration = {
++    easy: 150,
++    medium: 210,
++    hard: 240,
++  }[task.difficulty || "medium"];
++
++  return Math.min(Math.max(suggested, minDuration), Math.min(maxDuration, minutesPerDay));
++}
++
+ function countCompletedTasks(days) {
+   return (days || []).reduce((sum, day) => {
+     const done = (day.tasks || []).filter((task) => task.completed).length;
+@@ -70,48 +113,141 @@ function inferTreeStage(progress) {
+   return 4;
+ }
+ 
++function parseTopicEntry(rawTopic) {
++  const text = String(rawTopic || "").trim();
++  if (!text) return null;
++
++  const lower = text.toLowerCase();
++  const difficultyMatch = text.match(/\(?\s*(easy|medium|hard)\s*\)?\s*$/i);
++  const difficulty = difficultyMatch ? difficultyMatch[1].toLowerCase() : "medium";
++  const title = difficultyMatch
++    ? text.slice(0, difficultyMatch.index).replace(/[-|:\s()]+$/g, "").trim()
++    : text;
++
++  const weightMap = {
++    easy: 0.7,
++    medium: 1,
++    hard: 1.4,
++  };
++
++  return {
++    title: title || "Study topic",
++    difficulty: difficulty in weightMap ? difficulty : "medium",
++    weight: weightMap[difficulty] || 1,
++  };
++}
++
+ function buildPlanDays({ subjects, topics, examDate, hours }) {
+   const subjectList = splitSubjects(subjects);
+-  const topicList = splitTopics(topics);
++  const topicList = splitTopics(topics)
++    .map(parseTopicEntry)
++    .filter(Boolean);
+ 
+   const safeTopics =
+     topicList.length > 0
+       ? topicList
+-      : subjectList.map((s) => `${s} revision`);
++      : splitSubjects(subjects).map((s) => ({
++          title: `${s} revision`,
++          difficulty: "medium",
++          weight: 1,
++        }));
+ 
+   const totalDaysAvailable = daysUntilExam(examDate);
+-  const daysCount = Math.max(1, Math.min(totalDaysAvailable, safeTopics.length));
++  const minutesPerDay = Math.max(60, Number(hours || 5) * 60);
++  const maxSessionsByHours = Math.max(1, Math.min(3, Math.floor(minutesPerDay / 90)));
+ 
+-  const baseMinutes = Math.max(
+-    20,
+-    Math.round((Number(hours || 5) * 60) / Math.max(1, safeTopics.length))
+-  );
++  const today = parseLocalDate(new Date());
+ 
+-  const today = new Date();
+-  today.setHours(0, 0, 0, 0);
+-
+-  const days = Array.from({ length: daysCount }, (_, i) => ({
+-    day: `Day ${i + 1}`,
+-    date: formatDateISO(addDays(today, i)),
+-    tasks: [],
++  const coreTasks = safeTopics.map((topic, index) => ({
++    ...topic,
++    type: "core",
++    subject:
++      subjectList[index % subjectList.length] || subjectList[0] || "Study",
+   }));
+ 
+-  safeTopics.forEach((topic, index) => {
+-    const dayIndex = index % daysCount;
+-    const subject = subjectList[index % subjectList.length] || subjectList[0] || "Study";
++  const sessionsPerDay = Math.min(
++    maxSessionsByHours,
++    Math.max(1, Math.ceil(coreTasks.length / Math.max(1, totalDaysAvailable)))
++  );
+ 
+-    const durationMinutes = baseMinutes + (index % 3) * 5;
++  const totalSlots = totalDaysAvailable * sessionsPerDay;
++  const planTasks = coreTasks.slice(0, totalSlots);
++
++  const remainingSlots = totalSlots - planTasks.length;
++  if (remainingSlots > 0) {
++    if (remainingSlots >= 1) {
++      planTasks.push({
++        title: "Final revision of all topics",
++        difficulty: "medium",
++        weight: 1.1,
++        type: "final",
++        subject: subjectList[0] || "Study",
++      });
++    }
++    if (remainingSlots >= 2) {
++      planTasks.push({
++        title: "Last minute notes and tips",
++        difficulty: "medium",
++        weight: 0.9,
++        type: "final",
++        subject: subjectList[0] || "Study",
++      });
++    }
++    for (let i = planTasks.length; i < totalSlots; i += 1) {
++      const topic = coreTasks[i % coreTasks.length] || safeTopics[0];
++      planTasks.push({
++        title: `Revision of ${topic.title}`,
++        difficulty: "medium",
++        weight: 0.9,
++        type: "revision",
++        subject: topic.subject || subjectList[0] || "Study",
++      });
++    }
++  }
+ 
+-    days[dayIndex].tasks.push({
+-      title: topic,
+-      subject,
+-      duration: `${durationMinutes} min`,
+-      completed: false,
+-      completedAt: null,
+-      treeStage: 0,
+-      progress: 0,
+-      sessionHistory: [],
++  const days = Array.from({ length: totalDaysAvailable }, (_, dayIndex) => {
++    const dayTasks = planTasks.slice(
++      dayIndex * sessionsPerDay,
++      (dayIndex + 1) * sessionsPerDay
++    );
++
++    const tasks = dayTasks.map((task, taskIndex) => {
++      const isSingleTaskDay = dayTasks.length === 1;
++      const durationMinutes = isSingleTaskDay
++        ? getSuggestedDuration(task, minutesPerDay)
++        : (() => {
++            const totalWeight = dayTasks.reduce((sum, current) => sum + current.weight, 0);
++            const rawMinutes = Math.max(
++              30,
++              Math.round((minutesPerDay * task.weight) / Math.max(1, totalWeight))
++            );
++            const minMinutes = Math.max(30, getSuggestedDuration(task, minutesPerDay) / 2);
++            return Math.max(
++              minMinutes,
++              Math.min(
++                rawMinutes,
++                minutesPerDay - 30 * (dayTasks.length - taskIndex - 1)
++              )
++            );
++          })();
++
++      return {
++        title: task.title,
++        subject: task.subject || subjectList[(dayIndex + taskIndex) % subjectList.length] || subjectList[0] || "Study",
++        duration: `${Math.round(durationMinutes)} min`,
++        completed: false,
++        completedAt: null,
++        treeStage: 0,
++        progress: 0,
++        sessionHistory: [],
++      };
+     });
++
++    return {
++      day: `Day ${dayIndex + 1}`,
++      date: formatDateISO(addDays(today, dayIndex)),
++      tasks,
++    };
+   });
+ 
+   return days.filter((day) => day.tasks.length > 0);
+@@ -147,20 +283,24 @@ function carryForwardCompletion(previousPlan, nextDays) {
+   }));
+ }
+ 
++function getRequestUserId(req) {
++  return req.user?._id || req.user?.id || null;
++}
++
+ async function findOwnedPlan(req, id) {
+-  const query = { _id: id };
+-  const userId = req.user?._id || req.user?.id || null;
+-  if (userId) query.userId = userId;
+-  return StudyPlan.findOne(query);
++  const userId = getRequestUserId(req);
++  if (!userId) return null;
++  return StudyPlan.findOne({ _id: id, userId });
+ }
+ 
+ exports.getStudyPlans = async (req, res) => {
+   try {
+-    const query = {};
+-    const userId = req.user?._id || req.user?.id || null;
+-    if (userId) query.userId = userId;
++    const userId = getRequestUserId(req);
++    if (!userId) {
++      return res.status(401).json({ message: "Not authorized" });
++    }
+ 
+-    const plans = await StudyPlan.find(query).sort({ createdAt: -1 });
++    const plans = await StudyPlan.find({ userId }).sort({ createdAt: -1 });
+     return res.json(plans);
+   } catch (error) {
+     console.error("Get study plans error:", error);
+@@ -170,6 +310,11 @@ exports.getStudyPlans = async (req, res) => {
+ 
+ exports.generateStudyPlan = async (req, res) => {
+   try {
++    const userId = getRequestUserId(req);
++    if (!userId) {
++      return res.status(401).json({ message: "Not authorized" });
++    }
++
+     const { subjects, topics, examDate, hours } = req.body;
+ 
+     if (!subjects || !topics || !examDate) {
+@@ -184,7 +329,7 @@ exports.generateStudyPlan = async (req, res) => {
+     });
+ 
+     const plan = await StudyPlan.create({
+-      userId: req.user?._id || req.user?.id || null,
++      userId,
+       subjects,
+       topics,
+       examDate,
+@@ -195,6 +340,16 @@ exports.generateStudyPlan = async (req, res) => {
+       completedTasks: 0,
+     });
+ 
++    if (plan.userId) {
++      await createNotification({
++        user: plan.userId,
++        type: "study",
++        title: "Study plan ready",
++        message: "Your study plan has been created. Start your first session now.",
++        link: "/study-planner",
++      });
++    }
++
+     return res.status(201).json(plan);
+   } catch (error) {
+     console.error("Generate study plan error:", error);
+@@ -277,6 +432,7 @@ exports.completeTask = async (req, res) => {
+       return res.status(404).json({ message: "Task not found" });
+     }
+ 
++    const wasCompleted = task.completed;
+     if (!task.completed) {
+       task.completed = true;
+       task.completedAt = new Date();
+@@ -292,6 +448,17 @@ exports.completeTask = async (req, res) => {
+         : "active";
+ 
+     await plan.save();
++
++    if (!wasCompleted && plan.userId) {
++      await createNotification({
++        user: plan.userId,
++        type: "study",
++        title: "Task completed",
++        message: `Nice work! You completed "${task.title}" from your study plan.`,
++        link: "/study-planner",
++      });
++    }
++
+     return res.json(plan);
+   } catch (error) {
+     console.error("Complete task error:", error);
+@@ -350,6 +517,16 @@ exports.endSessionAndPlantTree = async (req, res) => {
+ 
+     await plan.save();
+ 
++    if (plan.userId) {
++      await createNotification({
++        user: plan.userId,
++        type: "study",
++        title: "Study session completed",
++        message: `Great job! Your session for "${topic || task.title}" is complete, and your tree has grown.`,
++        link: "/study-planner",
++      });
++    }
++
+     const plantedTree = await ForestTree.create({
+       userId: plan.userId || req.user?._id || req.user?.id || null,
+       planId: plan._id,
+diff --git a/LearnX_Scratch/LearnX_Scratch/backend/models/User.js b/LearnX_Scratch/LearnX_Scratch/backend/models/User.js
+index 132c334..a033f75 100644
+--- a/LearnX_Scratch/LearnX_Scratch/backend/models/User.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/models/User.js
+@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema(
+     streak: {
+       type: Number,
+       default: 0
+-    }
++    },
+ 
+     // ✅ ADD THESE (IMPORTANT)
+     subject: {
+@@ -65,4 +65,4 @@ const userSchema = new mongoose.Schema(
+   { timestamps: true }
+ );
+ 
+-module.exports = mongoose.model("User", userSchema);
+\ No newline at end of file
++module.exports = mongoose.model("User", userSchema);
+diff --git a/LearnX_Scratch/LearnX_Scratch/backend/routes/studyPlannerRoutes.js b/LearnX_Scratch/LearnX_Scratch/backend/routes/studyPlannerRoutes.js
+index c983c65..4f04cd4 100644
+--- a/LearnX_Scratch/LearnX_Scratch/backend/routes/studyPlannerRoutes.js
++++ b/LearnX_Scratch/LearnX_Scratch/backend/routes/studyPlannerRoutes.js
+@@ -1,5 +1,6 @@
+ const express = require("express");
+ const router = express.Router();
++const protect = require("../middleware/authMiddleware");
+ 
+ const {
+   getStudyPlans,
+@@ -10,11 +11,11 @@ const {
+   endSessionAndPlantTree,
+ } = require("../controllers/studyPlannerController");
+ 
+-router.get("/", getStudyPlans);
+-router.post("/generate", generateStudyPlan);
+-router.put("/task", completeTask);
+-router.post("/session/end", endSessionAndPlantTree);
+-router.put("/:id", updateStudyPlan);
+-router.delete("/:id", deleteStudyPlan);
++router.get("/", protect, getStudyPlans);
++router.post("/generate", protect, generateStudyPlan);
++router.put("/task", protect, completeTask);
++router.post("/session/end", protect, endSessionAndPlantTree);
++router.put("/:id", protect, updateStudyPlan);
++router.delete("/:id", protect, deleteStudyPlan);
+ 
+ module.exports = router;
+\ No newline at end of file
+diff --git a/LearnX_Scratch/LearnX_Scratch/frontend/src/components/NotificationBell.jsx b/LearnX_Scratch/LearnX_Scratch/frontend/src/components/NotificationBell.jsx
+index d8ba4cb..e06d35a 100644
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/src/components/NotificationBell.jsx
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/src/components/NotificationBell.jsx
+@@ -32,6 +32,15 @@ export default function NotificationBell() {
+     fetchNotifications();
+   }, []);
+ 
++  useEffect(() => {
++    const handleRefresh = () => {
++      fetchNotifications();
++    };
++
++    window.addEventListener("notification-refresh", handleRefresh);
++    return () => window.removeEventListener("notification-refresh", handleRefresh);
++  }, []);
++
+   useEffect(() => {
+     const handleClickOutside = (event) => {
+       if (
+diff --git a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Flashcards.jsx b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Flashcards.jsx
+index e9a7252..9321ca2 100644
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Flashcards.jsx
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Flashcards.jsx
+@@ -24,6 +24,7 @@ export default function Flashcards() {
+     try {
+       await api.post("/streak/complete/flashcard-review");
+       setReviewTracked(true);
++      window.dispatchEvent(new Event("notification-refresh"));
+     } catch (err) {
+       console.log("Streak update failed", err);
+     }
+diff --git a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Leaderboard.jsx b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Leaderboard.jsx
+index 0b8ba05..73e2356 100644
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Leaderboard.jsx
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/Leaderboard.jsx
+@@ -136,7 +136,6 @@ export default function StudentLeaderboard() {
+                 <th className="text-left px-4 py-3 font-semibold">Rank</th>
+                 <th className="text-left px-4 py-3 font-semibold">Student</th>
+                 <th className="text-left px-4 py-3 font-semibold">Quiz Score</th>
+-                <th className="text-left px-4 py-3 font-semibold">Speed</th>
+                 <th className="text-left px-4 py-3 font-semibold">Streak</th>
+                 <th className="text-left px-4 py-3 font-semibold">Total Points</th>
+               </tr>
+@@ -145,13 +144,13 @@ export default function StudentLeaderboard() {
+             <tbody>
+               {loading ? (
+                 <tr>
+-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
++                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                     Loading leaderboard...
+                   </td>
+                 </tr>
+               ) : leaderboard.length === 0 ? (
+                 <tr>
+-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
++                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                     No leaderboard data available
+                   </td>
+                 </tr>
+@@ -193,11 +192,6 @@ export default function StudentLeaderboard() {
+                         {student.quizScore || 0}%
+                       </td>
+ 
+-                      <td className="px-4 py-3 text-slate-600">
+-                        <span className="text-orange-500 mr-1">⚡</span>
+-                        {student.speed || 0}
+-                      </td>
+-
+                       <td className="px-4 py-3 text-slate-600">
+                         <span className="text-orange-500 mr-1">🔥</span>
+                         {student.streak || 0} days
+diff --git a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudentQuiz.jsx b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudentQuiz.jsx
+index 8f8fa9c..62c43f1 100644
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudentQuiz.jsx
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudentQuiz.jsx
+@@ -160,6 +160,7 @@ export default function StudentQuiz() {
+ 
+         try {
+             await api.post("/streak/complete/quiz-attempt");
++        window.dispatchEvent(new Event("notification-refresh"));
+         } catch (err) {
+             console.log("Streak update failed", err);
+         }
+diff --git a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudyPlanner.jsx b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudyPlanner.jsx
+index a4a8359..3ddb675 100644
+--- a/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudyPlanner.jsx
++++ b/LearnX_Scratch/LearnX_Scratch/frontend/src/pages/student/StudyPlanner.jsx
+@@ -3,6 +3,7 @@ import DashboardLayout from "../../components/DashboardLayout";
+ import api from "../../api/axios";
+ import FocusSession from "../../components/FocusSession";
+ import TreeGrowth from "../../components/TreeGrowth";
++import { useAuth } from "../../context/AuthContext";
+ import {
+   CheckCircle2,
+   Circle,
+@@ -33,12 +34,34 @@ const parseDurationToMinutes = (duration) => {
+   return value;
+ };
+ 
++const parseLocalDateString = (dateString) => {
++  const parts = String(dateString || "").split("-").map(Number);
++  if (parts.length !== 3 || parts.some((v) => !Number.isFinite(v))) return null;
++  return new Date(parts[0], parts[1] - 1, parts[2]);
++};
++
++const isPastLocalDate = (dateString) => {
++  const date = parseLocalDateString(dateString);
++  if (!date) return false;
++  const today = new Date();
++  today.setHours(0, 0, 0, 0);
++  return date < today;
++};
++
+ const getForestTreeSize = (minutes) => {
+   if (minutes >= 90) return "large";
+   if (minutes >= 45) return "medium";
+   return "small";
+ };
+ 
++const getTreeStageFromProgress = (progress = 0) => {
++  if (progress <= 0) return 0;
++  if (progress < 0.25) return 1;
++  if (progress < 0.5) return 2;
++  if (progress < 0.8) return 3;
++  return 4;
++};
++
+ const makeTaskKey = (planId, dayIndex, taskIndex) =>
+   `${planId || "plan"}-${dayIndex}-${taskIndex}`;
+ 
+@@ -58,9 +81,12 @@ export default function StudyPlanner() {
+   const [error, setError] = useState("");
+   const [showCompletedBanner, setShowCompletedBanner] = useState(false);
+ 
++  const { user } = useAuth();
+   const [session, setSession] = useState(null);
+   const [forest, setForest] = useState([]);
+   const [loadingForest, setLoadingForest] = useState(true);
++  const [isEndingSession, setIsEndingSession] = useState(false);
++  const endingSessionRef = useRef(false);
+   const sessionCompleteRef = useRef(false);
+ 
+   const resetForm = () => {
+@@ -84,9 +110,15 @@ export default function StudyPlanner() {
+   };
+ 
+   useEffect(() => {
++    if (!user) {
++      setPlans([]);
++      setSelectedPlan(null);
++      return;
++    }
++
+     fetchPlans();
+     fetchForest();
+-  }, []);
++  }, [user]);
+ 
+   const fetchForest = async () => {
+     try {
+@@ -242,20 +274,20 @@ export default function StudyPlanner() {
+         setSelectedPlan(updatedPlan);
+       }
+ 
++      try {
++        await api.post("/streak/complete/daily-study");
++      } catch (streakErr) {
++        console.log("Streak update failed", streakErr);
++      }
++
+       if (updatedPlan.status === "completed") {
+         setShowCompletedBanner(true);
+-
+-        try {
+-          await api.post("/streak/complete/daily-study");
+-        } catch (streakErr) {
+-          console.log("Streak update failed", streakErr);
+-        }
+-
+         setTimeout(() => {
+           setActiveTab("completed");
+         }, 100);
+       }
+ 
++      window.dispatchEvent(new Event("notification-refresh"));
+       return updatedPlan;
+     } catch (err) {
+       console.error(err);
+@@ -378,32 +410,82 @@ export default function StudyPlanner() {
+     return newTree;
+   };
+ 
+-  const endSession = async (payload) => {
++  const endSession = async (payload = {}) => {
++    if (endingSessionRef.current || !session?.planId) return;
++
++    endingSessionRef.current = true;
++    setIsEndingSession(true);
++
++    const currentSession = session;
++
++    const progress =
++      typeof payload.progress === "number"
++        ? payload.progress
++        : currentSession.targetSeconds
++        ? currentSession.elapsedSeconds / currentSession.targetSeconds
++        : 0;
++
++    const elapsedSeconds =
++      typeof payload.elapsedSeconds === "number"
++        ? payload.elapsedSeconds
++        : currentSession.elapsedSeconds;
++
++    const body = {
++      planId: currentSession.planId,
++      dayIndex: currentSession.dayIndex,
++      taskIndex: currentSession.taskIndex,
++      topic: payload.topic || currentSession.topic,
++      subject: payload.subject || currentSession.subject,
++      progress,
++      treeStage:
++        typeof payload.treeStage === "number"
++          ? payload.treeStage
++          : getTreeStageFromProgress(progress),
++      elapsedSeconds,
++    };
++
++    setSession((prev) => (prev ? { ...prev, open: false, status: "completed" } : prev));
++
+     try {
+-      const res = await api.post("/study-plan/session/end", {
+-        planId: session?.planId,
+-        dayIndex: session?.dayIndex,
+-        taskIndex: session?.taskIndex,
+-        ...payload,
+-      });
++      const res = await api.post("/study-plan/session/end", body);
++
++      const updatedPlan = res.data?.plan;
++      const plantedTree = res.data?.tree;
+ 
+-      const newTree = res.data?.tree;
+-      if (newTree) {
+-        setForest((prev) => [newTree, ...prev]);
++      if (updatedPlan) {
++        setPlans((prev) =>
++          prev.map((p) => (p._id === updatedPlan._id ? updatedPlan : p))
++        );
++        if (selectedPlan?._id === updatedPlan._id) {
++          setSelectedPlan(updatedPlan);
++        }
++      }
++
++      if (plantedTree) {
++        setForest((prev) => {
++          const exists = prev.some((t) => String(t._id) === String(plantedTree._id));
++          return exists ? prev : [plantedTree, ...prev];
++        });
++      }
++
++      if (updatedPlan?.status === "completed") {
++        setShowCompletedBanner(true);
++        setTimeout(() => setActiveTab("completed"), 100);
+       }
+ 
+-      await finalizeSession(payload || {});
++      window.dispatchEvent(new Event("notification-refresh"));
+     } catch (err) {
+       console.error("End session API error:", err);
+-      const fallbackTree = await finalizeSession(payload || {});
+-      if (fallbackTree) {
+-        setForest((prev) => [fallbackTree, ...prev]);
+-      }
++      setError("Failed to end session");
++    } finally {
++      endingSessionRef.current = false;
++      setIsEndingSession(false);
++      setSession(null);
+     }
+   };
+ 
+   const completeCurrentSession = async () => {
+-    if (!session?.planId) return;
++    if (!session?.planId || endingSessionRef.current) return;
+ 
+     await endSession({
+       topic: session.topic,
+@@ -662,9 +744,17 @@ export default function StudyPlanner() {
+         {filteredPlans.length > 0 && (
+           <div className="flex flex-wrap gap-3">
+             {filteredPlans.map((plan) => (
+-              <button
++              <div
+                 key={plan._id}
++                role="button"
++                tabIndex={0}
+                 onClick={() => setSelectedPlan(plan)}
++                onKeyDown={(e) => {
++                  if (e.key === "Enter" || e.key === " ") {
++                    e.preventDefault();
++                    setSelectedPlan(plan);
++                  }
++                }}
+                 onContextMenu={(e) => {
+                   e.preventDefault();
+                   e.stopPropagation();
+@@ -674,7 +764,7 @@ export default function StudyPlanner() {
+                     plan,
+                   });
+                 }}
+-                className={`rounded-xl border px-4 py-2 transition-colors ${
++                className={`group flex items-center justify-between rounded-xl border px-4 py-2 transition-colors ${
+                   selectedPlan?._id === plan._id
+                     ? "bg-purple-600 text-white"
+                     : "bg-white hover:bg-gray-50"
+@@ -682,9 +772,28 @@ export default function StudyPlanner() {
+               >
+                 <span className="inline-flex items-center gap-2">
+                   {plan.subjects}
+-                  <MoreVertical className="h-4 w-4 opacity-70" />
+                 </span>
+-              </button>
++
++                <button
++                  type="button"
++                  onClick={(e) => {
++                    e.preventDefault();
++                    e.stopPropagation();
++                    setMenu({
++                      x: e.clientX,
++                      y: e.clientY,
++                      plan,
++                    });
++                  }}
++                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
++                    selectedPlan?._id === plan._id
++                      ? "bg-white/15 text-white hover:bg-white/25"
++                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
++                  }`}
++                >
++                  <MoreVertical className="h-4 w-4" />
++                </button>
++              </div>
+             ))}
+           </div>
+         )}
+@@ -737,9 +846,16 @@ export default function StudyPlanner() {
+                       <p className="font-semibold text-gray-900">{day.day}</p>
+                       <p className="mt-1 text-xs text-gray-400">{day.date}</p>
+                     </div>
+-                    <span className="rounded border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
+-                      {dayDone}/{dayTasks.length}
+-                    </span>
++                    <div className="flex items-center gap-2">
++                      {isPastLocalDate(day.date) && dayTasks.some((task) => !task.completed) ? (
++                        <span className="rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700">
++                          Missed
++                        </span>
++                      ) : null}
++                      <span className="rounded border border-purple-200 bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700">
++                        {dayDone}/{dayTasks.length}
++                      </span>
++                    </div>
+                   </div>
+ 
+                   <div className="mb-3 h-1 w-full rounded-full bg-gray-200">
+@@ -930,7 +1046,7 @@ export default function StudyPlanner() {
+                 >
+                   <TreeGrowth
+                     progress={tree.progress || 0}
+-                    planted={true}
++                    planted={false}
+                     size={tree.size}
+                     className="!min-h-[250px]"
+                   />
+@@ -1017,6 +1133,7 @@ export default function StudyPlanner() {
+           onClose={closeSession}
+           onContinueLater={continueLaterSession}
+           onEndSession={endSession}
++          isEndingSession={isEndingSession}
+         />
+       </div>
+     </DashboardLayout>

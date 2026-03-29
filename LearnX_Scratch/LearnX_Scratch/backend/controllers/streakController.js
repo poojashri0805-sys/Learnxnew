@@ -1,4 +1,6 @@
 const Streak = require("../models/Streak");
+const Notification = require("../models/Notification");
+const createNotification = require("../utils/createNotification");
 
 const ACTIVITY_DEFINITIONS = [
   {
@@ -146,6 +148,44 @@ function buildActivityCounts(activityLog) {
   }
 
   return counts;
+}
+
+function hasRecentNotification(userId, title, windowMs = 12 * 60 * 60 * 1000) {
+  if (!userId || !title) return false;
+  return Notification.exists({
+    user: userId,
+    title,
+    read: false,
+    createdAt: { $gte: new Date(Date.now() - windowMs) },
+  });
+}
+
+async function notifyStreakExpiry(userId, streak) {
+  const todayKey = getTodayKey();
+  const yesterdayKey = shiftDateKey(todayKey, -1);
+
+  const hasActivityToday =
+    Array.isArray(streak.activityLog) &&
+    streak.activityLog.some((item) => item.dateKey === todayKey);
+
+  if (
+    streak &&
+    streak.lastActiveDateKey === yesterdayKey &&
+    !hasActivityToday
+  ) {
+    const title = "Streak at risk";
+    const message = `Your ${streak.currentStreak}-day streak could expire today. Complete one activity to keep it alive.`;
+    const alreadyNotified = await hasRecentNotification(userId, title, 24 * 60 * 60 * 1000);
+    if (!alreadyNotified) {
+      await createNotification({
+        user: userId,
+        type: "streak",
+        title,
+        message,
+        link: "/streak-system",
+      });
+    }
+  }
 }
 
 function buildAchievements(streak, activityCounts) {
@@ -310,6 +350,8 @@ exports.getStreakDashboard = async (req, res) => {
       streak.lastActiveDateKey = null;
     }
 
+    await notifyStreakExpiry(userId, streak);
+
     let payload;
     try {
       payload = buildDashboardPayload(streak);
@@ -363,6 +405,8 @@ exports.completeActivity = async (req, res) => {
       (item) => item.dateKey === todayKey && item.key === activityKey
     );
 
+    const previousStreak = streak.currentStreak || 0;
+
     if (!alreadyDoneToday) {
       streak.activityLog.push({
         key: activity.key,
@@ -378,7 +422,7 @@ exports.completeActivity = async (req, res) => {
         (item) => item.dateKey === todayKey
       ).length;
 
-      if (todayActivities >= 3) {
+      if (todayActivities >= 1) {
         if (streak.lastActiveDateKey === todayKey) {
           // already counted today
         } else if (streak.lastActiveDateKey === yesterdayKey) {
@@ -395,6 +439,14 @@ exports.completeActivity = async (req, res) => {
       }
 
       await streak.save();
+
+      await createNotification({
+        user: req.user._id,
+        type: "streak",
+        title: "Streak updated",
+        message: `Nice work! You completed ${activity.title}, earned ${activity.points} points, and your streak is now ${streak.currentStreak} day${streak.currentStreak === 1 ? "" : "s"}.`,
+        link: "/leaderboard",
+      });
     }
 
     const fresh = await Streak.findById(streak._id);
