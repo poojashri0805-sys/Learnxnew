@@ -63,6 +63,21 @@ function daysUntilExam(examDate) {
   return Math.max(1, diff + 1);
 }
 
+async function notifyExamReminder(userId, examDate) {
+  if (!userId || !examDate) return;
+  const daysLeft = daysUntilExam(examDate);
+
+  if (daysLeft <= 7) {
+    await createNotification({
+      user: userId,
+      type: "exam",
+      title: "Exam date approaching",
+      message: `Your exam is in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. Stay on track with your study plan!`,
+      link: "/study-planner",
+    });
+  }
+}
+
 function getTreeSizeFromMinutes(minutes) {
   if (minutes >= 90) return "large";
   if (minutes >= 45) return "medium";
@@ -348,6 +363,7 @@ exports.generateStudyPlan = async (req, res) => {
         message: "Your study plan has been created. Start your first session now.",
         link: "/study-planner",
       });
+      await notifyExamReminder(plan.userId, plan.examDate);
     }
 
     return res.status(201).json(plan);
@@ -394,6 +410,7 @@ exports.updateStudyPlan = async (req, res) => {
     }
 
     await plan.save();
+    await notifyExamReminder(plan.userId, plan.examDate);
     return res.json(plan);
   } catch (error) {
     console.error("Update study plan error:", error);

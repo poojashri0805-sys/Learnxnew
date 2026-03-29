@@ -15,32 +15,44 @@ export default function StudentQuiz() {
     const { user } = useAuth();
 
     useEffect(() => {
-        const allQuizzes =
-            JSON.parse(localStorage.getItem("publishedQuizzes")) || [];
+        const fetchQuizzes = async () => {
+            try {
+                const res = await api.get("/quizzes");
+                const availableQuizzes = res.data || [];
+                setQuizzes(availableQuizzes);
+                return;
+            } catch (err) {
+                console.error("Failed to load quizzes from server, falling back to local storage", err);
+            }
 
-        const studentClass =
-            user?.grade ||
-            user?.gradeClass ||
-            user?.className ||
-            user?.class ||
-            "";
+            const allQuizzes = JSON.parse(localStorage.getItem("publishedQuizzes")) || [];
+            const studentClass =
+                user?.grade ||
+                user?.gradeClass ||
+                user?.className ||
+                user?.class ||
+                "";
 
-        // Get completed quizzes for this student
-        const completedQuizzes =
-            JSON.parse(localStorage.getItem("completedQuizzes")) || {};
-        const studentKey = user?.email || user?.id || "anonymous";
-        const studentCompletedIds = completedQuizzes[studentKey] || [];
+            const completedQuizzes = JSON.parse(localStorage.getItem("completedQuizzes")) || {};
+            const studentKey = user?.email || user?.id || "anonymous";
+            const studentCompletedIds = completedQuizzes[studentKey] || [];
 
-        // Filter: only show quizzes for this class that the student hasn't completed
-        const filteredQuizzes = allQuizzes.filter(
-            (quiz) =>
-                quiz.className &&
-                studentClass &&
-                quiz.className.trim().toLowerCase() === studentClass.trim().toLowerCase() &&
-                !studentCompletedIds.includes(quiz.id)
-        );
+            const filteredQuizzes = allQuizzes.filter(
+                (quiz) => {
+                    const quizId = quiz._id || quiz.id || "";
+                    return (
+                        quiz.className &&
+                        studentClass &&
+                        quiz.className.trim().toLowerCase() === studentClass.trim().toLowerCase() &&
+                        !studentCompletedIds.includes(quizId)
+                    );
+                }
+            );
 
-        setQuizzes(filteredQuizzes);
+            setQuizzes(filteredQuizzes);
+        };
+
+        fetchQuizzes();
     }, [user]);
 
     useEffect(() => {
@@ -114,9 +126,11 @@ export default function StudentQuiz() {
             }
         });
 
+        const quizId = selectedQuiz._id || selectedQuiz.id || "";
+        const quizTitle = selectedQuiz.title || selectedQuiz.topic || "Quiz";
         const resultPayload = {
             id: Date.now(),
-            quizId: selectedQuiz.id,
+            quizId,
             teacherName: selectedQuiz.teacherName,
             subject: selectedQuiz.subject,
             topic: selectedQuiz.topic,
@@ -144,8 +158,8 @@ export default function StudentQuiz() {
 
         try {
             await api.post("/quiz-results", {
-                quizId: selectedQuiz.id,
-                quizTitle: selectedQuiz.topic,
+                quizId,
+                quizTitle,
                 subject: selectedQuiz.subject,
                 topic: selectedQuiz.topic,
                 teacherName: selectedQuiz.teacherName,
@@ -154,13 +168,15 @@ export default function StudentQuiz() {
                 total: selectedQuiz.questions.length,
                 submittedAt: new Date().toISOString(),
             });
+
+            // Refresh notification list immediately after saving quiz grade
+            window.dispatchEvent(new Event("notification-refresh"));
         } catch (err) {
             console.log("Quiz result save failed", err);
         }
 
         try {
             await api.post("/streak/complete/quiz-attempt");
-        window.dispatchEvent(new Event("notification-refresh"));
         } catch (err) {
             console.log("Streak update failed", err);
         }
@@ -169,15 +185,15 @@ export default function StudentQuiz() {
         const completedQuizzes =
             JSON.parse(localStorage.getItem("completedQuizzes")) || {};
         const studentKey = user?.email || user?.id || "anonymous";
-        
+
         if (!completedQuizzes[studentKey]) {
             completedQuizzes[studentKey] = [];
         }
-        completedQuizzes[studentKey].push(selectedQuiz.id);
+        completedQuizzes[studentKey].push(quizId);
         localStorage.setItem("completedQuizzes", JSON.stringify(completedQuizzes));
 
         // Remove from current view
-        setQuizzes((prev) => prev.filter((quiz) => quiz.id !== selectedQuiz.id));
+        setQuizzes((prev) => prev.filter((quiz) => (quiz._id || quiz.id) !== quizId));
 
         setScore(marks);
         setSubmitted(true);
@@ -195,11 +211,10 @@ export default function StudentQuiz() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {quizzes.map((quiz) => (
-                                <div
-                                    key={quiz.id}
-                                    className="bg-white rounded-xl p-5 shadow-sm border border-gray-200"
-                                >
+                            {quizzes.map((quiz) => {
+                                const quizId = quiz._id || quiz.id || Date.now();
+                                return (
+                                    <div key={quizId} className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
                                     <h2 className="text-xl font-semibold mb-3">{quiz.topic}</h2>
                                     <p className="text-gray-700 mb-2">
                                         Teacher: <span className="font-medium">{quiz.teacherName}</span>
@@ -226,7 +241,7 @@ export default function StudentQuiz() {
                                         View Quiz
                                     </button>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     )
                 ) : !started ? (

@@ -1,4 +1,5 @@
 const QuizResult = require("../models/QuizResult");
+const Quiz = require("../models/Quiz");
 const createNotification = require("../utils/createNotification");
 
 exports.createQuizResult = async (req, res) => {
@@ -43,8 +44,25 @@ exports.createQuizResult = async (req, res) => {
       type: "quiz",
       title: "Quiz submitted",
       message: `You completed "${quizTitle || 'a quiz'}" with ${percentage}% score.`,
-      link: "/quiz",
+      link: "/student/quiz",
     });
+
+    if (quizId) {
+      try {
+        const quiz = await Quiz.findById(quizId).lean();
+        if (quiz?.createdBy && String(quiz.createdBy) !== String(req.user._id)) {
+          await createNotification({
+            user: quiz.createdBy,
+            type: "quiz",
+            title: "Quiz attempted",
+            message: `${req.user.fullName || req.user.name || 'A student'} attempted your quiz "${quiz.title || quiz.topic || quizTitle}" and scored ${percentage}%.`,
+            link: "/teacher/dashboard",
+          });
+        }
+      } catch (notifyErr) {
+        console.error("Teacher notification error:", notifyErr);
+      }
+    }
 
     res.status(201).json(result);
   } catch (err) {

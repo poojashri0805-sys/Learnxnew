@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { Sparkles, Brain } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../api/axios";
 
 export default function QuizGenerator() {
     const [activeTab, setActiveTab] = useState("generator");
@@ -56,14 +57,13 @@ export default function QuizGenerator() {
             console.error(err);
         }
     };
-    const handleSendQuiz = () => {
+    const handleSendQuiz = async () => {
         if (!topic || !selectedClass || questions.length === 0) {
             alert("Generate the quiz first, then send it.");
             return;
         }
 
         const quizPayload = {
-            id: Date.now(),
             title: topic,
             topic,
             subject,
@@ -73,35 +73,40 @@ export default function QuizGenerator() {
             className: selectedClass,
             teacherName: user?.name || user?.fullName || "Teacher",
             questions,
-            attempts: 0,
-            avgScore: 0,
-            sentAt: new Date().toISOString(),
         };
-        const existingPublishedQuizzes =
-            JSON.parse(localStorage.getItem("publishedQuizzes")) || [];
 
-        existingPublishedQuizzes.push(quizPayload);
+        try {
+            const response = await api.post("/quizzes", quizPayload);
+            const savedQuiz = response.data;
 
-        localStorage.setItem(
-            "publishedQuizzes",
-            JSON.stringify(existingPublishedQuizzes)
-        );
+            const publishedQuiz = {
+                id: savedQuiz._id || savedQuiz.id || Date.now(),
+                ...quizPayload,
+                sentAt: savedQuiz.sentAt || new Date().toISOString(),
+            };
 
-        const existingQuizBank =
-            JSON.parse(localStorage.getItem("quizBank")) || [];
+            const existingPublishedQuizzes =
+                JSON.parse(localStorage.getItem("publishedQuizzes")) || [];
+            existingPublishedQuizzes.push(publishedQuiz);
+            localStorage.setItem("publishedQuizzes", JSON.stringify(existingPublishedQuizzes));
 
-        existingQuizBank.push(quizPayload);
+            const existingQuizBank =
+                JSON.parse(localStorage.getItem("quizBank")) || [];
+            existingQuizBank.push(publishedQuiz);
+            localStorage.setItem("quizBank", JSON.stringify(existingQuizBank));
 
-        localStorage.setItem("quizBank", JSON.stringify(existingQuizBank));
-        const allQuizBank = JSON.parse(localStorage.getItem("quizBank")) || [];
-        const currentTeacherName = user?.name || user?.fullName || "Teacher";
+            const currentTeacherName = user?.name || user?.fullName || "Teacher";
+            const teacherQuizzes = existingQuizBank.filter(
+                (quiz) => quiz.teacherName === currentTeacherName
+            );
+            setQuizBank(teacherQuizzes);
+            window.dispatchEvent(new Event("notification-refresh"));
 
-        const teacherQuizzes = allQuizBank.filter(
-            (quiz) => quiz.teacherName === currentTeacherName
-        );
-
-        setQuizBank(teacherQuizzes);
-        alert("Quiz sent to students successfully!");
+            alert("Quiz sent to students successfully and notifications were delivered.");
+        } catch (err) {
+            console.error("Failed to send quiz to server", err);
+            alert("Could not send quiz to server. Students may not receive notifications.");
+        }
     };
     const getQuizStats = (quizId) => {
         const results = JSON.parse(localStorage.getItem("quizResults")) || [];

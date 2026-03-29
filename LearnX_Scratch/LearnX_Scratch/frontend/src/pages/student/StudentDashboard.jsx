@@ -138,10 +138,10 @@ export default function StudentDashboard() {
         iconColor: "text-amber-600",
       },
       {
-        label: "Flashcards Due",
-        value: `${data?.flashcardsDue || 0}`,
+        label: "Flashcards Reviewed",
+        value: `${data?.flashcardsReviewed || 0}`,
         icon: BookOpen,
-        trend: "Ready to review",
+        trend: "Reviewed today",
         bg: "bg-indigo-50",
         iconBg: "bg-indigo-100",
         iconColor: "text-indigo-600",
@@ -266,7 +266,7 @@ export default function StudentDashboard() {
 
             <p className="mt-2 text-white/80 text-base md:text-lg">
               You&apos;re on a {data?.currentStreak || 0}-day streak!{" "}
-              {data?.flashcardsDue || 0} flashcards due for review today.
+              {data?.flashcardsReviewed || 0} flashcards reviewed today.
             </p>
 
             <button

@@ -10,6 +10,7 @@ export default function Register() {
     fullName: "",
     email: "",
     password: "",
+    studentId: "",
     gradeClass: "",
     schoolName: "",
     subject: "",
@@ -175,6 +176,20 @@ export default function Register() {
 
               {role === "student" && (
                 <>
+                  <div>
+                    <label className="text-sm font-semibold block text-gray-700 mb-2">
+                      Student ID
+                    </label>
+                    <input
+                      name="studentId"
+                      value={form.studentId}
+                      onChange={handleChange}
+                      placeholder="Enter your student ID"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+
                   <div>
                     <label className="text-sm font-semibold block text-gray-700 mb-2">
                       Grade/Class
