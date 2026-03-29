@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { updateFromLessonPlan } = require("./curriculumController");
 
 function extractJson(text) {
     const match = text.match(/\{[\s\S]*\}/);
@@ -355,6 +356,25 @@ Important instructions:
         if (parsed) {
             parsed.totalTeachingDays = teachingDates.length;
             parsed.totalPeriodsAvailable = totalPeriodsAvailable;
+        }
+
+        // Update curriculum tracker with topics from this lesson plan
+        const teacherId = req.user?._id?.toString() || req.user?.id || req.body.teacherId;
+        if (teacherId && subject && className && parsed?.topics) {
+            const topicNames = parsed.topics.map(t => t.topicName).filter(t => t);
+            console.log(`[Curriculum Update] TeacherId: ${teacherId}, ClassName: ${className}, Subject: ${subject}, Topics: ${topicNames.length}`);
+            try {
+                const updated = await updateFromLessonPlan(teacherId, subject, topicNames, className);
+                if (updated) {
+                    console.log(`[Curriculum Update] Successfully updated curriculum for ${className} - ${subject}`);
+                } else {
+                    console.log(`[Curriculum Update] Failed to update curriculum`);
+                }
+            } catch (err) {
+                console.error(`[Curriculum Update] Error: ${err.message}`);
+            }
+        } else {
+            console.log(`[Curriculum Update] Missing data - teacherId: ${teacherId}, className: ${className}, subject: ${subject}, topics: ${parsed?.topics?.length}`);
         }
 
         res.json({ lessonPlan: parsed });

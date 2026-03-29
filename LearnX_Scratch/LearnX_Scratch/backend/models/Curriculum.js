@@ -46,13 +46,13 @@ const CurriculumTrackerSchema = new Schema(
     teacherId: {
       type: String,
       required: true,
-      unique: true,
       index: true,
       trim: true,
     },
     className: {
       type: String,
-      default: "Class 12",
+      default: "Grade 10",
+      required: true,
     },
     academicYear: {
       type: String,
@@ -78,5 +78,8 @@ const CurriculumTrackerSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Create compound unique index on teacherId and className
+CurriculumTrackerSchema.index({ teacherId: 1, className: 1 }, { unique: true });
 
 module.exports = mongoose.model("CurriculumTracker", CurriculumTrackerSchema);
