@@ -136,7 +136,6 @@ export default function StudentLeaderboard() {
                 <th className="text-left px-4 py-3 font-semibold">Rank</th>
                 <th className="text-left px-4 py-3 font-semibold">Student</th>
                 <th className="text-left px-4 py-3 font-semibold">Quiz Score</th>
-                <th className="text-left px-4 py-3 font-semibold">Speed</th>
                 <th className="text-left px-4 py-3 font-semibold">Streak</th>
                 <th className="text-left px-4 py-3 font-semibold">Total Points</th>
               </tr>
@@ -145,13 +144,13 @@ export default function StudentLeaderboard() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
                     Loading leaderboard...
                   </td>
                 </tr>
               ) : leaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
                     No leaderboard data available
                   </td>
                 </tr>
@@ -191,11 +190,6 @@ export default function StudentLeaderboard() {
 
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {student.quizScore || 0}%
-                      </td>
-
-                      <td className="px-4 py-3 text-slate-600">
-                        <span className="text-orange-500 mr-1">⚡</span>
-                        {student.speed || 0}
                       </td>
 
                       <td className="px-4 py-3 text-slate-600">

@@ -33,6 +33,15 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
+    const handleRefresh = () => {
+      fetchNotifications();
+    };
+
+    window.addEventListener("notification-refresh", handleRefresh);
+    return () => window.removeEventListener("notification-refresh", handleRefresh);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&

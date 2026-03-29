@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const pdfParse = require("pdf-parse");
+
 function extractJson(text) {
   const match = text.match(/\{[\s\S]*\}/);
   return match ? match[0] : text;
@@ -7,14 +8,14 @@ function extractJson(text) {
 
 exports.generateFlashcards = async (req, res) => {
   try {
-    const { title = "", content = "" } = req.body;
+    const { title = "", content = "", numCards = 6 } = req.body;
 
     let pdfText = "";
 
     // 📄 Extract PDF text
     if (req.file) {
-        const parsed = await pdfParse(req.file.buffer);
-        pdfText = parsed.text || "";
+      const parsed = await pdfParse(req.file.buffer);
+      pdfText = parsed.text || "";
     }
 
     const sourceText = [title, content, pdfText]
@@ -27,8 +28,16 @@ exports.generateFlashcards = async (req, res) => {
       });
     }
 
+    const parsedNumCards = Math.max(1, Math.min(parseInt(numCards, 10) || 6, 20));
+
     const prompt = `
-Generate 6 flashcards from the content below.
+Generate exactly ${parsedNumCards} flashcards from the content below.
+
+Rules:
+- Return exactly ${parsedNumCards} flashcards
+- Do not return fewer or more than ${parsedNumCards}
+- Return ONLY JSON
+- Each flashcard must have: front, back, topic, difficulty
 
 Return ONLY JSON like:
 {
@@ -53,7 +62,7 @@ ${sourceText}
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // fast + free
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",
@@ -95,8 +104,9 @@ ${sourceText}
       });
     }
 
-    res.json({ flashcards });
+    const finalFlashcards = flashcards.slice(0, parsedNumCards);
 
+    res.json({ flashcards: finalFlashcards });
   } catch (error) {
     console.error("Flashcard error:", error.message);
     res.status(500).json({
@@ -189,7 +199,6 @@ ${content}
     }
 
     res.json({ questions });
-
   } catch (error) {
     console.error("Quiz error:", error.message);
     res.status(500).json({
