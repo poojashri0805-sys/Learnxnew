@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
+import api from "../../api/axios";
 import {
   AlertTriangle,
   BookOpenText,
@@ -634,6 +635,112 @@ export default function CurriculumTracker() {
 
   const [error, setError] = useState("");
 
+  // Sync topic status updates to backend API
+  const syncTopicStatusToAPI = async (subjectName, topicName, newStatus) => {
+    try {
+      // Convert frontend status format to backend format
+      const statusMap = {
+        "completed": "Done",
+        "in-progress": "In Progress",
+        "pending": "Pending"
+      };
+      
+      const backendStatus = statusMap[newStatus] || "Pending";
+      
+      // Find the subject and topic in current data
+      const subject = selectedGradeData.subjects?.find(s => s.name === subjectName);
+      if (!subject) {
+        console.error("[CurriculumTracker] Subject not found:", subjectName);
+        return;
+      }
+      
+      const topic = subject.topics?.find(t => t.name === topicName);
+      if (!topic) {
+        console.error("[CurriculumTracker] Topic not found:", topicName);
+        return;
+      }
+      
+      // Send update to API with multiple identifier options
+      const response = await api.put(`/curriculum/topic/${topic.id}`, {
+        subjectId: subject.id,
+        subjectName: subject.name,  // Backend can use this for name-based lookup
+        name: topicName,
+        status: backendStatus,
+        className: selectedGrade
+      });
+      
+      console.log("[CurriculumTracker] ✅ Synced topic status to API:", topicName, "→", backendStatus);
+      return response.data;
+    } catch (err) {
+      console.error("[CurriculumTracker] Error syncing topic status to API:", err.message);
+      // Still update locally even if API fails - offline mode
+    }
+  };
+
+  // Listen for localStorage changes from other components (like LessonPlanner)
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === STORAGE_KEY && event.newValue) {
+        console.log("[CurriculumTracker] Detected localStorage change - refreshing data");
+        try {
+          const updated = JSON.parse(event.newValue);
+          if (updated.gradeData) {
+            setGradeData(updated.gradeData);
+            console.log("[CurriculumTracker] ✅ Reloaded curriculum data from localStorage event");
+          }
+        } catch (err) {
+          console.error("[CurriculumTracker] Failed to parse updated localStorage:", err);
+        }
+      }
+    };
+
+    // Listen for custom event from LessonPlanner
+    const handleCurriculumUpdated = (event) => {
+      console.log("[CurriculumTracker] 📢 Received curriculumUpdated event:", event.detail);
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.gradeData) {
+            setGradeData(parsed.gradeData);
+            console.log("[CurriculumTracker] ✅ Reloaded curriculum data from localStorage (via event)");
+          }
+        }
+      } catch (err) {
+        console.error("[CurriculumTracker] Failed to reload curriculum data:", err);
+      }
+    };
+
+    // Auto-refresh on page visibility change (e.g., when switching tabs)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        console.log("[CurriculumTracker] Page became visible - checking for updates");
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.gradeData) {
+              setGradeData(parsed.gradeData);
+              console.log("[CurriculumTracker] ✅ Refreshed data on page visibility");
+            }
+          }
+        } catch (err) {
+          console.error("[CurriculumTracker] Failed to refresh on visibility change:", err);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("curriculumUpdated", handleCurriculumUpdated);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("curriculumUpdated", handleCurriculumUpdated);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const [contextMenu, setContextMenu] = useState({
     open: false,
     x: 0,
@@ -920,6 +1027,16 @@ export default function CurriculumTracker() {
     const newName = editingTopic.name.trim();
     if (!newName) return;
 
+    const { subject, topic } = findTopicFromIds(
+      editingTopic.subjectId,
+      editingTopic.topicId
+    );
+
+    const oldStatus = topic?.status;
+    const newStatus = DEFAULT_TOPIC_STATUSES.includes(editingTopic.status)
+      ? editingTopic.status
+      : "pending";
+
     updateSelectedGradeData((current) => ({
       ...current,
       subjects: (current.subjects || []).map((subject) => {
@@ -932,14 +1049,18 @@ export default function CurriculumTracker() {
             return {
               ...topic,
               name: newName,
-              status: DEFAULT_TOPIC_STATUSES.includes(editingTopic.status)
-                ? editingTopic.status
-                : "pending",
+              status: newStatus,
             };
           }),
         };
       }),
     }));
+
+    // If status changed, sync to backend API
+    if (oldStatus !== newStatus) {
+      console.log(`[CurriculumTracker] Status changed: ${oldStatus} → ${newStatus}`);
+      syncTopicStatusToAPI(subject.name, newName, newStatus);
+    }
 
     setEditingTopic({
       open: false,

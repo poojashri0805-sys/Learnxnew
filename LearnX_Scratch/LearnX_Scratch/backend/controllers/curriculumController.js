@@ -1,9 +1,37 @@
-const CurriculumTracker = require("../models/CurriculumTracker");
+const CurriculumTracker = require("../models/Curriculum");
+
+// Fix MongoDB indexes on startup
+async function fixIndexes() {
+  try {
+    const collection = CurriculumTracker.collection;
+    
+    // Get all existing indexes
+    const indexes = await collection.getIndexes();
+    console.log("[Curriculum] Existing indexes:", Object.keys(indexes));
+    
+    // Drop old unique index on teacherId if it exists
+    if (indexes.teacherId_1) {
+      console.log("[Curriculum] Dropping old teacherId_1 index");
+      await collection.dropIndex("teacherId_1");
+    }
+    
+    // Ensure compound index exists
+    console.log("[Curriculum] Creating compound index (teacherId_1, className_1)");
+    await collection.createIndex({ teacherId: 1, className: 1 }, { unique: true });
+    
+    console.log("[Curriculum] Indexes fixed successfully");
+  } catch (error) {
+    console.error("[Curriculum] Error fixing indexes:", error.message);
+  }
+}
+
+// Call on module load
+setTimeout(() => fixIndexes(), 1000);
 
 function createDefaultTracker(teacherId) {
   return {
     teacherId,
-    className: "Class 12",
+    className: "Grade 10",
     academicYear: "2025-2026",
     warningMessage:
       "At Risk — Need 10 more days than available to finish the remaining curriculum.",
@@ -110,11 +138,54 @@ async function getTeacherId(req) {
   );
 }
 
-async function loadOrCreateTracker(teacherId) {
-  let tracker = await CurriculumTracker.findOne({ teacherId });
+async function loadOrCreateTracker(teacherId, className = "Grade 10") {
+  let tracker = await CurriculumTracker.findOne({ teacherId, className });
 
   if (!tracker) {
-    tracker = await CurriculumTracker.create(createDefaultTracker(teacherId));
+    tracker = await CurriculumTracker.create({
+      teacherId,
+      className,
+      academicYear: "2025-2026",
+      warningMessage: "At Risk — Need 10 more days than available to finish the remaining curriculum.",
+      targetDate: new Date("2026-04-12"),
+      subjects: [
+        {
+          name: "Math",
+          order: 1,
+          topics: [
+            { name: "Algebraic expressions", status: "Done", order: 1 },
+            { name: "Quadratic equations", status: "Done", order: 2 },
+            { name: "Trigonometry", status: "Pending", order: 3 },
+            { name: "Integration", status: "Pending", order: 4 },
+          ],
+        },
+        {
+          name: "Physics",
+          order: 2,
+          topics: [
+            { name: "Newton's laws", status: "Done", order: 1 },
+            { name: "Work & motion", status: "In Progress", order: 2 },
+            { name: "Mechanics", status: "Pending", order: 3 },
+          ],
+        },
+        {
+          name: "Chemistry",
+          order: 3,
+          topics: [
+            { name: "Atomic structure", status: "Done", order: 1 },
+            { name: "Organic chemistry", status: "In Progress", order: 2 },
+          ],
+        },
+        {
+          name: "Biology",
+          order: 4,
+          topics: [
+            { name: "Cell biology", status: "Done", order: 1 },
+            { name: "Genetics", status: "Pending", order: 2 },
+          ],
+        },
+      ],
+    });
   }
 
   return tracker;
@@ -123,7 +194,8 @@ async function loadOrCreateTracker(teacherId) {
 exports.getMyCurriculum = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
 
     tracker.overallCompletion = decorateTracker(tracker).overallCompletion;
     await tracker.save();
@@ -140,16 +212,15 @@ exports.getMyCurriculum = async (req, res) => {
 exports.updateCurriculum = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
 
     const {
-      className,
       academicYear,
       warningMessage,
       targetDate,
     } = req.body;
 
-    if (className !== undefined) tracker.className = className;
     if (academicYear !== undefined) tracker.academicYear = academicYear;
     if (warningMessage !== undefined) tracker.warningMessage = warningMessage;
     if (targetDate !== undefined) tracker.targetDate = targetDate || null;
@@ -170,7 +241,8 @@ exports.updateCurriculum = async (req, res) => {
 exports.addSubject = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
     const { name } = req.body;
 
     if (!name || !name.trim()) {
@@ -199,7 +271,8 @@ exports.addSubject = async (req, res) => {
 exports.addTopic = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
 
     const { subjectId, name, status = "Pending" } = req.body;
 
@@ -238,44 +311,77 @@ exports.addTopic = async (req, res) => {
 exports.updateTopic = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
     const { topicId } = req.params;
-    const { subjectId, name, status } = req.body;
+    const { subjectId, name, status, subjectName } = req.body;
 
     let targetSubject = null;
     let targetTopic = null;
 
+    // First try to find by topicId if provided (MongoDB ID)
     if (subjectId) {
-      targetSubject = tracker.subjects.id(subjectId);
-      if (targetSubject) {
-        targetTopic = targetSubject.topics.id(topicId);
+      try {
+        targetSubject = tracker.subjects.id(subjectId);
+        if (targetSubject) {
+          targetTopic = targetSubject.topics.id(topicId);
+        }
+      } catch (err) {
+        console.log(`[updateTopic] Could not find by MongoDB ID: ${err.message}`);
       }
     }
 
+    // If not found by ID, try to find by subject name + topic name
+    if (!targetTopic && subjectName && name) {
+      console.log(`[updateTopic] Searching by subject name "${subjectName}" and topic name "${name}"`);
+      
+      for (const subject of tracker.subjects) {
+        if (subject.name.toLowerCase() === subjectName.toLowerCase()) {
+          targetSubject = subject;
+          // Find topic by name
+          const maybeTopic = subject.topics.find(t => 
+            t.name && t.name.toLowerCase() === name.toLowerCase()
+          );
+          if (maybeTopic) {
+            targetTopic = maybeTopic;
+            break;
+          }
+        }
+      }
+    }
+
+    // Last resort: search all subjects for topicId
     if (!targetTopic) {
       for (const subject of tracker.subjects) {
-        const maybeTopic = subject.topics.id(topicId);
-        if (maybeTopic) {
-          targetSubject = subject;
-          targetTopic = maybeTopic;
-          break;
+        try {
+          const maybeTopic = subject.topics.id(topicId);
+          if (maybeTopic) {
+            targetSubject = subject;
+            targetTopic = maybeTopic;
+            break;
+          }
+        } catch (err) {
+          continue;
         }
       }
     }
 
     if (!targetTopic) {
+      console.log(`[updateTopic] Topic not found - topicId: ${topicId}, subject: ${subjectName}, name: ${name}`);
       return res.status(404).json({ message: "Topic not found" });
     }
 
-    if (name !== undefined) targetTopic.name = name;
+    if (name !== undefined && name !== targetTopic.name) targetTopic.name = name;
     if (status !== undefined) targetTopic.status = status;
 
     const decorated = decorateTracker(tracker);
     tracker.overallCompletion = decorated.overallCompletion;
 
     await tracker.save();
+    console.log(`[updateTopic] ✅ Updated topic: ${targetTopic.name} → ${status}`);
     res.json(decorateTracker(tracker));
   } catch (error) {
+    console.error(`[updateTopic] Error:`, error);
     res.status(500).json({
       message: "Failed to update topic",
       error: error.message,
@@ -286,7 +392,8 @@ exports.updateTopic = async (req, res) => {
 exports.deleteTopic = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
     const { topicId } = req.params;
 
     let removed = false;
@@ -320,7 +427,8 @@ exports.deleteTopic = async (req, res) => {
 exports.deleteSubject = async (req, res) => {
   try {
     const teacherId = await getTeacherId(req);
-    const tracker = await loadOrCreateTracker(teacherId);
+    const className = req.query.className || req.body.className || "Grade 10";
+    const tracker = await loadOrCreateTracker(teacherId, className);
     const { subjectId } = req.params;
 
     const subject = tracker.subjects.id(subjectId);
@@ -340,5 +448,93 @@ exports.deleteSubject = async (req, res) => {
       message: "Failed to delete subject",
       error: error.message,
     });
+  }
+};
+
+// Update curriculum from lesson plan topics - SIMPLIFIED with findOneAndUpdate
+exports.updateFromLessonPlan = async (teacherId, subject, topics, className = "Grade 10") => {
+  try {
+    console.log(`[updateFromLessonPlan] Starting with teacherId: ${teacherId}, subject: ${subject}, className: ${className}, topics count: ${topics?.length}`);
+    
+    if (!teacherId || !subject || !topics || topics.length === 0) {
+      console.log(`[updateFromLessonPlan] Validation failed - missing required data`);
+      return null;
+    }
+
+    // Find or create tracker using atomic operation
+    let tracker = await CurriculumTracker.findOne({ teacherId, className });
+    
+    if (!tracker) {
+      console.log(`[updateFromLessonPlan] Tracker not found, creating new tracker for ${teacherId} - ${className}`);
+      tracker = await CurriculumTracker.create({
+        teacherId,
+        className,
+        academicYear: "2025-2026",
+        subjects: []
+      });
+    }
+
+    console.log(`[updateFromLessonPlan] Operating on tracker with ${tracker.subjects.length} subjects`);
+
+    // Find or create subject
+    let subjectObj = tracker.subjects.find(s => s.name.toLowerCase() === subject.toLowerCase());
+    
+    if (!subjectObj) {
+      console.log(`[updateFromLessonPlan] Subject "${subject}" not found, creating new subject`);
+      subjectObj = {
+        name: subject,
+        order: tracker.subjects.length + 1,
+        topics: []
+      };
+      tracker.subjects.push(subjectObj);
+    } else {
+      console.log(`[updateFromLessonPlan] Found existing subject "${subject}" with ${subjectObj.topics.length} topics`);
+    }
+
+    // Add or update topics
+    let topicsAdded = 0;
+    let topicsUpdated = 0;
+    
+    topics.forEach((topicName) => {
+      if (!topicName || !topicName.trim()) return;
+
+      const topicTrim = topicName.trim();
+      const existingTopicIndex = subjectObj.topics.findIndex(
+        t => t.name.toLowerCase() === topicTrim.toLowerCase()
+      );
+
+      if (existingTopicIndex === -1) {
+        // Add new topic as "In Progress"
+        subjectObj.topics.push({
+          name: topicTrim,
+          status: "In Progress",
+          order: subjectObj.topics.length + 1
+        });
+        console.log(`[updateFromLessonPlan] Added topic: "${topicTrim}"`);
+        topicsAdded++;
+      } else if (subjectObj.topics[existingTopicIndex].status === "Pending") {
+        // Update pending topic to "In Progress"
+        subjectObj.topics[existingTopicIndex].status = "In Progress";
+        console.log(`[updateFromLessonPlan] Updated topic "${topicTrim}" from Pending to In Progress`);
+        topicsUpdated++;
+      } else {
+        console.log(`[updateFromLessonPlan] Topic "${topicTrim}" already exists with status "${subjectObj.topics[existingTopicIndex].status}"`);
+      }
+    });
+
+    // Calculate completion
+    const decorated = decorateTracker(tracker);
+    tracker.overallCompletion = decorated.overallCompletion;
+
+    // Save tracker
+    await tracker.save();
+    console.log(`[updateFromLessonPlan] ✅ Successfully updated curriculum tracker. Added: ${topicsAdded}, Updated: ${topicsUpdated}`);
+    console.log(`[updateFromLessonPlan] Overall completion: ${decorated.overallCompletion}%`);
+    
+    return decorateTracker(tracker);
+  } catch (error) {
+    console.error("[updateFromLessonPlan] ❌ Error:", error.message);
+    console.error("[updateFromLessonPlan] Stack:", error.stack);
+    return null;
   }
 };

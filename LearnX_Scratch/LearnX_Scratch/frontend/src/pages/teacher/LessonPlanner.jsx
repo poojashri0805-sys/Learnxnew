@@ -2,6 +2,7 @@ import { useState } from "react";
 import DashboardLayout from "../../components/DashboardLayout";
 import { CalendarDays, BookOpen, Sparkles, Link as LinkIcon, CircleHelp } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import api from "../../api/axios";
 
 const weekDays = [
     "Monday",
@@ -55,32 +56,20 @@ export default function LessonPlanner() {
         try {
             setLoading(true);
 
-            const res = await fetch("http://localhost:5000/api/lesson-planner", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    subject,
-                    className,
-                    lessonTitle,
-                    lessonContent,
-                    startDate,
-                    deadline,
-                    workingDays,
-                    periodsPerDay,
-                    hoursPerPeriod,
-                    learningGoal,
-                }),
+            const res = await api.post("/lesson-planner", {
+                subject,
+                className,
+                lessonTitle,
+                lessonContent,
+                startDate,
+                deadline,
+                workingDays,
+                periodsPerDay,
+                hoursPerPeriod,
+                learningGoal,
             });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.message || "Failed to generate lesson plan");
-                setLoading(false);
-                return;
-            }
+            const data = res.data;
 
             setGeneratedPlan(data.lessonPlan || null);
 
@@ -104,9 +93,96 @@ export default function LessonPlanner() {
             const existingPlans = JSON.parse(localStorage.getItem("lessonPlans")) || [];
             existingPlans.push(lessonPayload);
             localStorage.setItem("lessonPlans", JSON.stringify(existingPlans));
+
+            // Sync topics to Curriculum Tracker localStorage
+            const CURRICULUM_STORAGE_KEY = "curriculum_grade_tracker_v5";
+            const curriculumData = JSON.parse(localStorage.getItem(CURRICULUM_STORAGE_KEY)) || { gradeData: {} };
+            
+            if (!curriculumData.gradeData) {
+                curriculumData.gradeData = {};
+            }
+            
+            let gradeData = curriculumData.gradeData[className];
+            if (!gradeData) {
+                gradeData = { examDate: "", reminderNotes: "", subjects: [] };
+                console.log(`[Curriculum Sync] Created new grade data for ${className}`);
+            } else {
+                console.log(`[Curriculum Sync] Loading existing grade data for ${className}`);
+            }
+
+            // Find or create subject in curriculum
+            let subjectObj = gradeData.subjects.find(s => s.name.toLowerCase() === subject.toLowerCase());
+            if (!subjectObj) {
+                subjectObj = {
+                    id: `subject-${Date.now()}`,
+                    name: subject,
+                    topics: []
+                };
+                gradeData.subjects.push(subjectObj);
+                console.log(`[Curriculum Sync] Created new subject: ${subject}`);
+            } else {
+                console.log(`[Curriculum Sync] Using existing subject: ${subject} (${subjectObj.topics.length} existing topics)`);
+            }
+
+            // Add topics from lesson plan
+            const topicsCount = data.lessonPlan?.topics?.length || 0;
+            console.log(`[Curriculum Sync] Processing ${topicsCount} topics from lesson plan`);
+            
+            if (data.lessonPlan?.topics && topicsCount > 0) {
+                data.lessonPlan.topics.forEach((topic, index) => {
+                    const topicName = topic.topicName || topic.name;
+                    if (topicName && topicName.trim()) {
+                        // Check if topic already exists
+                        const existingTopic = subjectObj.topics.find(
+                            t => t.name.toLowerCase() === topicName.toLowerCase()
+                        );
+                        
+                        if (!existingTopic) {
+                            // Add new topic as "in-progress"
+                            const newTopic = {
+                                id: `topic-${Date.now()}-${Math.random()}`,
+                                name: topicName.trim(),
+                                status: "in-progress"
+                            };
+                            subjectObj.topics.push(newTopic);
+                            console.log(`[Curriculum Sync] ✅ Added topic ${index + 1}/${topicsCount}: ${topicName}`);
+                        } else {
+                            console.log(`[Curriculum Sync] ⚠️ Skipped duplicate topic: ${topicName}`);
+                        }
+                    } else {
+                        console.log(`[Curriculum Sync] ⚠️ Skipped empty topic at index ${index}`);
+                    }
+                });
+            } else {
+                console.log(`[Curriculum Sync] ⚠️ No topics to sync - either empty or undefined`);
+            }
+
+            // Save updated curriculum data
+            curriculumData.gradeData[className] = gradeData;
+            localStorage.setItem(CURRICULUM_STORAGE_KEY, JSON.stringify(curriculumData));
+            console.log(`[Curriculum Sync] ✅ Saved curriculum data. Subject "${subject}" now has ${subjectObj.topics.length} total topics in localStorage`);
+
+            // Dispatch custom event to notify CurriculumTracker about the update
+            window.dispatchEvent(new CustomEvent("curriculumUpdated", {
+              detail: {
+                className,
+                subject,
+                topicsCount,
+                timestamp: Date.now(),
+                actualTopics: subjectObj.topics.length
+              }
+            }));
+            console.log(`[Curriculum Sync] 📢 Dispatched curriculumUpdated event for ${className}/${subject}`);
+            console.log(`[Curriculum Sync] 🔍 localStorage check - current data:`, JSON.parse(localStorage.getItem(CURRICULUM_STORAGE_KEY)));
+
+
+            // Show success with curriculum update info
+            const successMsg = `✅ Lesson plan created!\n\n📚 Topics added to Curriculum Tracker:\n${subject} - ${topicsCount} topics marked as "In Progress"`;
+            alert(successMsg);
         } catch (error) {
-            console.error(error);
-            alert("Lesson plan generation failed");
+            console.error("Lesson plan error:", error);
+            const errorMsg = error?.response?.data?.message || error?.message || "Lesson plan generation failed";
+            alert(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -148,10 +224,6 @@ export default function LessonPlanner() {
                                 className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             >
                                 <option value="">Select class</option>
-                                <option value="Grade 6">Grade 6</option>
-                                <option value="Grade 7">Grade 7</option>
-                                <option value="Grade 8">Grade 8</option>
-                                <option value="Grade 9">Grade 9</option>
                                 <option value="Grade 10">Grade 10</option>
                                 <option value="Grade 11">Grade 11</option>
                                 <option value="Grade 12">Grade 12</option>
