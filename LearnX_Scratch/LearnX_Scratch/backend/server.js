@@ -1,10 +1,12 @@
-require("dotenv").config({ path: "./backend/.env" });
 const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const teacherRoutes = require("./routes/teacherRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const performanceRoutes = require("./routes/performanceRoutes");
+const forestRoutes = require("./routes/forestRoutes");
 
 
 const app = express();
@@ -32,8 +34,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/textbooks", require("./routes/textbookRoutes"));
 app.use("/api/chatbot", require("./routes/chatbotRoutes"));
 app.use("/api/teacher", require("./routes/teacherDashboardRoutes"));
-app.use("/api/performance", require("./routes/performanceRoutes"));
+app.use("/api/performance", performanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/forest", forestRoutes);
 app.get("/", (req, res) => {
   res.send("LearnX API is running");
 });

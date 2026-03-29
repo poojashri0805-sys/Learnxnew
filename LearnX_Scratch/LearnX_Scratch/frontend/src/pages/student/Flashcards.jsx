@@ -7,6 +7,7 @@ export default function Flashcards() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
+  const [numCards, setNumCards] = useState(6);
 
   const [cards, setCards] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -23,6 +24,7 @@ export default function Flashcards() {
     try {
       await api.post("/streak/complete/flashcard-review");
       setReviewTracked(true);
+      window.dispatchEvent(new Event("notification-refresh"));
     } catch (err) {
       console.log("Streak update failed", err);
     }
@@ -36,6 +38,7 @@ export default function Flashcards() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("content", content);
+      formData.append("numCards", String(numCards));
 
       if (mode === "pdf" && pdfFile) {
         formData.append("pdf", pdfFile);
@@ -129,6 +132,20 @@ export default function Flashcards() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-2">
+                Number of Flashcards
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                value={numCards}
+                onChange={(e) => setNumCards(Number(e.target.value))}
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
             {mode === "text" ? (
               <div>
                 <label className="block text-sm font-medium text-slate-900 mb-2">
@@ -186,19 +203,60 @@ export default function Flashcards() {
             </div>
 
             <div
+              className="w-full max-w-3xl perspective-[1200px]"
               onClick={() => setFlipped((prev) => !prev)}
+<<<<<<< Updated upstream
               className="w-full max-w-3xl min-h-[260px] rounded-2xl cursor-pointer flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-indigo-600 to-blue-600"
+=======
+>>>>>>> Stashed changes
             >
-              <div className="inline-flex px-3 py-1 rounded-md bg-white/15 text-sm mb-4">
-                {currentCard?.topic || "Flashcard"}
-              </div>
+              <div
+                className={`relative w-full min-h-[260px] cursor-pointer transform-gpu transition-transform duration-700 preserve-3d ${
+                  flipped ? "rotate-y-180" : ""
+                }`}
+                style={{
+                  transformStyle: "preserve-3d",
+                  transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                }}
+              >
+                {/* Front */}
+                <div
+                  className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-indigo-600 to-purple-600 backface-hidden"
+                  style={{ backfaceVisibility: "hidden" }}
+                >
+                  <div className="inline-flex px-3 py-1 rounded-md bg-white/15 text-sm mb-4">
+                    {currentCard?.topic || "Flashcard"}
+                  </div>
 
-              <div className="text-2xl md:text-3xl font-semibold">
-                {flipped ? currentCard?.back : currentCard?.front}
-              </div>
+                  <div className="text-2xl md:text-3xl font-semibold">
+                    {currentCard?.front}
+                  </div>
 
-              <div className="mt-4 text-sm text-white/70">
-                Click to reveal answer
+                  <div className="mt-4 text-sm text-white/70">
+                    Click to reveal answer
+                  </div>
+                </div>
+
+                {/* Back */}
+                <div
+                  className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-slate-900 to-slate-700 backface-hidden"
+                  style={{
+                    backfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)",
+                  }}
+                >
+                  <div className="inline-flex px-3 py-1 rounded-md bg-white/15 text-sm mb-4">
+                    Answer
+                  </div>
+
+                  <div className="text-2xl md:text-3xl font-semibold">
+                    {currentCard?.back}
+                  </div>
+
+                  <div className="mt-4 text-sm text-white/70">
+                    Click to flip back
+                  </div>
+                </div>
               </div>
             </div>
 

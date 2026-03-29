@@ -1,4 +1,5 @@
 const QuizResult = require("../models/QuizResult");
+const createNotification = require("../utils/createNotification");
 
 exports.createQuizResult = async (req, res) => {
   try {
@@ -35,6 +36,14 @@ exports.createQuizResult = async (req, res) => {
       total: numericTotal,
       percentage,
       submittedAt: submittedAt ? new Date(submittedAt) : new Date(),
+    });
+
+    await createNotification({
+      user: req.user._id,
+      type: "quiz",
+      title: "Quiz submitted",
+      message: `You completed "${quizTitle || 'a quiz'}" with ${percentage}% score.`,
+      link: "/quiz",
     });
 
     res.status(201).json(result);
