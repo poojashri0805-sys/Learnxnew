@@ -157,7 +157,7 @@ export default function StudentAiTutor() {
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col min-h-0">
                     <button
                         onClick={handleNewChat}
-                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium hover:opacity-90 transition"
+                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:opacity-90 transition"
                     >
                         <Plus size={18} />
                         New Chat
@@ -179,7 +179,7 @@ export default function StudentAiTutor() {
                                         className="rounded-xl border border-slate-200 bg-slate-50 p-3"
                                     >
                                         <div className="flex items-start gap-2">
-                                            <BookOpen size={18} className="text-purple-600 mt-0.5" />
+                                            <BookOpen size={18} className="text-blue-600 mt-0.5" />
                                             <div>
                                                 <p className="text-sm font-semibold text-slate-900">
                                                     {book.title}
@@ -211,7 +211,7 @@ export default function StudentAiTutor() {
                                         key={subj}
                                         onClick={() => setSelectedSubject(subj)}
                                         className={`px-4 py-2 rounded-full text-sm font-medium transition ${selectedSubject === subj
-                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+                                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                                                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                                             }`}
                                     >
@@ -280,7 +280,7 @@ export default function StudentAiTutor() {
                                 >
                                     <div
                                         className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-7 shadow-sm whitespace-pre-line ${msg.type === "question"
-                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+                                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                                                 : "bg-white border border-slate-200 text-slate-800"
                                             }`}
                                     >
@@ -312,12 +312,12 @@ export default function StudentAiTutor() {
                                 value={question}
                                 onChange={(e) => setQuestion(e.target.value)}
                                 placeholder="Ask anything from your textbook..."
-                                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                                className="flex-1 rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                             />
                             <button
                                 onClick={handleAsk}
                                 disabled={loading}
-                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
+                                className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:opacity-90 transition disabled:opacity-50 flex items-center gap-2"
                             >
                                 <SendHorizonal size={18} />
                                 Send

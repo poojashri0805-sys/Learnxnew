@@ -220,7 +220,7 @@ export default function StudentQuiz() {
                                             setSubmitted(false);
                                             setScore(0);
                                         }}
-                                        className="bg-purple-600 text-white px-5 py-2 rounded-lg"
+                                        className="bg-blue-600 text-white px-5 py-2 rounded-lg"
                                     >
                                         View Quiz
                                     </button>
@@ -243,7 +243,7 @@ export default function StudentQuiz() {
 
                         <button
                             onClick={() => setStarted(true)}
-                            className="bg-purple-600 text-white px-5 py-2 rounded-lg"
+                            className="bg-blue-600 text-white px-5 py-2 rounded-lg"
                         >
                             Start Quiz
                         </button>
@@ -327,7 +327,7 @@ export default function StudentQuiz() {
                                             onClick={() => handleOptionClick(opt)}
                                             className={`block w-full text-left border rounded-lg px-4 py-3 ${
                                                 isSelected
-                                                    ? "bg-purple-100 border-purple-500"
+                                                    ? "bg-blue-100 border-blue-500"
                                                     : "border-gray-300 hover:bg-gray-50"
                                             }`}
                                         >
@@ -357,7 +357,7 @@ export default function StudentQuiz() {
                             ) : (
                                 <button
                                     onClick={handleNext}
-                                    className="bg-purple-600 text-white px-5 py-2 rounded-lg"
+                                    className="bg-blue-600 text-white px-5 py-2 rounded-lg"
                                 >
                                     Next
                                 </button>

@@ -97,7 +97,7 @@ export default function Flashcards() {
               onClick={() => setMode("text")}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 mode === "text"
-                  ? "bg-white shadow text-purple-600"
+                  ? "bg-white shadow text-blue-600"
                   : "text-slate-600"
               }`}
             >
@@ -108,7 +108,7 @@ export default function Flashcards() {
               onClick={() => setMode("pdf")}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 mode === "pdf"
-                  ? "bg-white shadow text-purple-600"
+                  ? "bg-white shadow text-blue-600"
                   : "text-slate-600"
               }`}
             >
@@ -125,7 +125,7 @@ export default function Flashcards() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Newton's Laws"
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -138,7 +138,7 @@ export default function Flashcards() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Paste notes, lecture content, or a topic summary..."
-                  className="w-full min-h-[180px] rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                  className="w-full min-h-[180px] rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
             ) : (
@@ -168,7 +168,7 @@ export default function Flashcards() {
           <button
             onClick={handleGenerate}
             disabled={loading}
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-white font-medium shadow-md shadow-purple-200 hover:bg-purple-700 transition disabled:opacity-70"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white font-medium shadow-md shadow-blue-200 hover:bg-blue-700 transition disabled:opacity-70"
           >
             {loading ? "Generating..." : "Generate Flashcards"}
           </button>
@@ -187,7 +187,7 @@ export default function Flashcards() {
 
             <div
               onClick={() => setFlipped((prev) => !prev)}
-              className="w-full max-w-3xl min-h-[260px] rounded-2xl cursor-pointer flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-indigo-600 to-purple-600"
+              className="w-full max-w-3xl min-h-[260px] rounded-2xl cursor-pointer flex flex-col items-center justify-center px-8 text-center text-white shadow-xl bg-gradient-to-br from-indigo-600 to-blue-600"
             >
               <div className="inline-flex px-3 py-1 rounded-md bg-white/15 text-sm mb-4">
                 {currentCard?.topic || "Flashcard"}

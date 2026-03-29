@@ -143,7 +143,7 @@ export default function QuizGenerator() {
                     <button
                         onClick={() => setActiveTab("generator")}
                         className={`px-6 py-3 font-medium border border-gray-300 ${activeTab === "generator"
-                                ? "bg-purple-600 text-white border-purple-600"
+                                ? "bg-blue-600 text-white border-blue-600"
                                 : "bg-white text-gray-700"
                             }`}
                         style={{ borderTopLeftRadius: '4px' }}
@@ -154,7 +154,7 @@ export default function QuizGenerator() {
                     <button
                         onClick={() => setActiveTab("bank")}
                         className={`px-6 py-3 font-medium border border-l-0 border-gray-300 ${activeTab === "bank"
-                                ? "bg-purple-600 text-white border-purple-600"
+                                ? "bg-blue-600 text-white border-blue-600"
                                 : "bg-white text-gray-700"
                             }`}
                     >
@@ -177,7 +177,7 @@ export default function QuizGenerator() {
                                     placeholder="e.g. Science"
                                     value={subject}
                                     onChange={(e) => setSubject(e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                                 />
                             </div>
 
@@ -190,7 +190,7 @@ export default function QuizGenerator() {
                                     placeholder="e.g. Newton's Laws of Motion"
                                     value={topic}
                                     onChange={(e) => setTopic(e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                                 />
                             </div>
                             <div className="mb-4">
@@ -200,7 +200,7 @@ export default function QuizGenerator() {
                                 <select
                                     value={selectedClass}
                                     onChange={(e) => setSelectedClass(e.target.value)}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                                 >
                                     <option value="">Select class</option>
                                     <option value="Grade 9">Grade 9</option>
@@ -220,7 +220,7 @@ export default function QuizGenerator() {
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                     rows={6}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500 resize-none"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"
                                 />
                             </div>
 
@@ -233,7 +233,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setQuizType("MCQ")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${quizType === "MCQ"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -242,7 +242,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setQuizType("Short Answer")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${quizType === "Short Answer"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -251,7 +251,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setQuizType("Conceptual")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${quizType === "Conceptual"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -269,7 +269,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setDifficulty("Easy")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${difficulty === "Easy"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -278,7 +278,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setDifficulty("Medium")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${difficulty === "Medium"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -287,7 +287,7 @@ export default function QuizGenerator() {
                                     <button
                                         onClick={() => setDifficulty("Hard")}
                                         className={`flex-1 py-2 px-4 rounded text-sm font-medium transition-colors ${difficulty === "Hard"
-                                                ? "bg-purple-600 text-white"
+                                                ? "bg-blue-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                             }`}
                                     >
@@ -304,7 +304,7 @@ export default function QuizGenerator() {
                                     min="30"
                                     value={quizTimer}
                                     onChange={(e) => setQuizTimer(Number(e.target.value))}
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                                 />
                             </div>
 
@@ -319,9 +319,9 @@ export default function QuizGenerator() {
                                     max="20"
                                     value={numQuestions}
                                     onChange={(e) => setNumQuestions(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                                     style={{
-                                        background: `linear-gradient(to right, rgb(147 51 234) 0%, rgb(147 51 234) ${((numQuestions - 1) / 19) * 100}%, rgb(229 231 235) ${((numQuestions - 1) / 19) * 100}%, rgb(229 231 235) 100%)`
+                                        background: `linear-gradient(to right, rgb(37 99 235) 0%, rgb(37 99 235) ${((numQuestions - 1) / 19) * 100}%, rgb(229 231 235) ${((numQuestions - 1) / 19) * 100}%, rgb(229 231 235) 100%)`
                                     }}
                                 />
                             </div>
@@ -331,7 +331,7 @@ export default function QuizGenerator() {
                             <button
                             
                                 onClick={handleGenerate}
-                                className="w-full bg-purple-400 hover:bg-purple-500 text-white py-3 rounded font-medium flex items-center justify-center gap-2 transition-colors"
+                                className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 rounded font-medium flex items-center justify-center gap-2 transition-colors"
                             >
                                 <Sparkles className="w-5 h-5" />
                                 Generate Quiz

@@ -124,7 +124,7 @@ export default function LessonPlanner() {
 
                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-purple-600" />
+                        <BookOpen className="w-5 h-5 text-blue-600" />
                         Lesson Plan Configuration
                     </h2>
 
@@ -136,7 +136,7 @@ export default function LessonPlanner() {
                                 placeholder="e.g. Physics"
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -145,7 +145,7 @@ export default function LessonPlanner() {
                             <select
                                 value={className}
                                 onChange={(e) => setClassName(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             >
                                 <option value="">Select class</option>
                                 <option value="Grade 6">Grade 6</option>
@@ -165,7 +165,7 @@ export default function LessonPlanner() {
                                 placeholder="e.g. Newton's Laws of Motion"
                                 value={lessonTitle}
                                 onChange={(e) => setLessonTitle(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -176,7 +176,7 @@ export default function LessonPlanner() {
                                 placeholder="Paste chapter notes or full lesson content here..."
                                 value={lessonContent}
                                 onChange={(e) => setLessonContent(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 resize-none focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 resize-none focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -187,7 +187,7 @@ export default function LessonPlanner() {
                                 placeholder="e.g. Students should understand the laws and solve conceptual plus numerical problems."
                                 value={learningGoal}
                                 onChange={(e) => setLearningGoal(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 resize-none focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 resize-none focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -197,7 +197,7 @@ export default function LessonPlanner() {
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -207,7 +207,7 @@ export default function LessonPlanner() {
                                 type="date"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -218,7 +218,7 @@ export default function LessonPlanner() {
                                 min="1"
                                 value={periodsPerDay}
                                 onChange={(e) => setPeriodsPerDay(Number(e.target.value))}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -230,7 +230,7 @@ export default function LessonPlanner() {
                                 step="0.5"
                                 value={hoursPerPeriod}
                                 onChange={(e) => setHoursPerPeriod(Number(e.target.value))}
-                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-purple-500"
+                                className="w-full border border-gray-300 rounded-xl px-3 py-3 focus:outline-none focus:border-blue-500"
                             />
                         </div>
 
@@ -243,7 +243,7 @@ export default function LessonPlanner() {
                                         type="button"
                                         onClick={() => toggleWorkingDay(day)}
                                         className={`px-4 py-2 rounded-xl border text-sm ${workingDays.includes(day)
-                                                ? "bg-purple-600 text-white border-purple-600"
+                                                ? "bg-blue-600 text-white border-blue-600"
                                                 : "bg-white text-gray-700 border-gray-300"
                                             }`}
                                     >
@@ -257,7 +257,7 @@ export default function LessonPlanner() {
                     <button
                         onClick={handleGeneratePlan}
                         disabled={loading}
-                        className="mt-6 w-full md:w-auto bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+                        className="mt-6 w-full md:w-auto bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2"
                     >
                         <Sparkles className="w-5 h-5" />
                         {loading ? "Generating..." : "Generate Lesson Plan"}
@@ -266,7 +266,7 @@ export default function LessonPlanner() {
 
                 {!generatedPlan ? (
                     <div className="bg-white border border-gray-200 rounded-2xl p-10 shadow-sm text-center">
-                        <CalendarDays className="w-14 h-14 text-purple-400 mx-auto mb-4" />
+                        <CalendarDays className="w-14 h-14 text-blue-400 mx-auto mb-4" />
                         <h2 className="text-2xl font-semibold mb-2">Your AI lesson plan will appear here</h2>
                         <p className="text-gray-500 max-w-2xl mx-auto">
                             Generate the plan to see lesson overview, topic breakdown, day-wise schedule,
@@ -315,7 +315,7 @@ export default function LessonPlanner() {
                                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
                                             <h4 className="text-lg font-semibold">{topic.topicName}</h4>
                                             <div className="flex gap-2 flex-wrap">
-                                                <span className="text-xs px-3 py-1 rounded-full bg-purple-100 text-purple-700">
+                                                <span className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700">
                                                     {topic.difficulty}
                                                 </span>
                                                 <span className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700">
@@ -332,7 +332,7 @@ export default function LessonPlanner() {
 
                                         <div className="mt-4 border-t pt-4">
                                             <h5 className="font-semibold mb-2 flex items-center gap-2">
-                                                <LinkIcon className="w-4 h-4 text-purple-600" />
+                                                <LinkIcon className="w-4 h-4 text-blue-600" />
                                                 Resources
                                             </h5>
                                             <div className="bg-slate-50 rounded-xl p-4 text-sm">
@@ -343,7 +343,7 @@ export default function LessonPlanner() {
                                                         href={topic.resourceLink}
                                                         target="_blank"
                                                         rel="noreferrer"
-                                                        className="text-purple-600 font-medium break-all"
+                                                        className="text-blue-600 font-medium break-all"
                                                     >
                                                         {topic.resourceLink}
                                                     </a>
@@ -367,13 +367,13 @@ export default function LessonPlanner() {
 
                                         <div className="mt-4 border-t pt-4">
                                             <h5 className="font-semibold mb-3 flex items-center gap-2">
-                                                <CircleHelp className="w-4 h-4 text-purple-600" />
+                                                <CircleHelp className="w-4 h-4 text-blue-600" />
                                                 Topic-wise Practice Questions
                                             </h5>
                                             <div className="space-y-3">
                                                 {topic.practiceQuestions?.map((q, qIndex) => (
                                                     <div key={qIndex} className="bg-slate-50 rounded-xl p-4">
-                                                        <p className="text-xs uppercase tracking-wide text-purple-600 font-semibold mb-1">
+                                                        <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-1">
                                                             {q.type}
                                                         </p>
                                                         <p className="text-sm text-gray-800">{q.question}</p>

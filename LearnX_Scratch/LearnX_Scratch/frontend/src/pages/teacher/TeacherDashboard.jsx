@@ -1,6 +1,6 @@
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   Users,
   Brain,
@@ -22,6 +22,7 @@ import {
   BadgeAlert,
   ClipboardList,
   CircleAlert,
+  RotateCcw,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -79,25 +80,47 @@ export default function TeacherDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [quizCount, setQuizCount] = useState(0);
+  const [lessonCount, setLessonCount] = useState(0);
+  const alertsRef = useRef(null);
+
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await api.get("/teacher/dashboard");
+      setData(res.data);
+
+      // Get quiz count from localStorage for this teacher
+      const allQuizzes = JSON.parse(localStorage.getItem("quizBank")) || [];
+      const currentTeacherName = user?.name || user?.fullName || "Teacher";
+      const teacherQuizzes = allQuizzes.filter(
+        (quiz) => quiz.teacherName === currentTeacherName
+      );
+      setQuizCount(teacherQuizzes.length);
+
+      // Get lesson plan count from localStorage for this teacher
+      const allLessons = JSON.parse(localStorage.getItem("lessonPlans")) || [];
+      const teacherLessons = allLessons.filter(
+        (lesson) => lesson.teacherName === currentTeacherName
+      );
+      setLessonCount(teacherLessons.length);
+    } catch (err) {
+      console.error("Teacher dashboard fetch error:", err);
+      setError("Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const res = await api.get("/teacher/dashboard");
-        setData(res.data);
-      } catch (err) {
-        console.error("Teacher dashboard fetch error:", err);
-        setError("Failed to load dashboard data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboard();
-  }, []);
+    
+    // Refresh data every 30 seconds for real-time activity
+    const interval = setInterval(fetchDashboard, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const subjectData = useMemo(() => data?.subjectData || [], [data]);
 
@@ -113,7 +136,7 @@ export default function TeacherDashboard() {
       },
       {
         title: "Quizzes Created",
-        value: data?.stats?.quizzesCreated ?? "0",
+        value: quizCount,
         trend: "",
         icon: Brain,
         iconBg: "bg-[#eef2ff]",
@@ -141,22 +164,14 @@ export default function TeacherDashboard() {
       },
       {
         title: "Lessons Planned",
-        value: data?.stats?.lessonsPlanned ?? "0",
+        value: lessonCount,
         trend: "",
         icon: BookText,
         iconBg: "bg-[#fff8e7]",
         iconColor: "text-amber-500",
       },
-      {
-        title: "Topics Done",
-        value: data?.stats?.topicsDone ?? "0/0",
-        trend: "",
-        icon: Layers3,
-        iconBg: "bg-[#eef6ff]",
-        iconColor: "text-sky-600",
-      },
     ],
-    [data]
+    [data, quizCount, lessonCount]
   );
 
   const quickAccess = [
@@ -167,13 +182,55 @@ export default function TeacherDashboard() {
   ];
 
   const alerts = data?.alerts || [];
-  const recentActivity = data?.recentActivity || [];
+  const recentActivity = (() => {
+    const apiActivity = data?.recentActivity || [];
+    
+    // Add quizzes created by this teacher from localStorage
+    const allQuizzes = JSON.parse(localStorage.getItem("quizBank")) || [];
+    const currentTeacherName = user?.name || user?.fullName || "Teacher";
+    const teacherQuizzes = allQuizzes.filter(
+      (quiz) => quiz.teacherName === currentTeacherName
+    );
+
+    const quizActivities = teacherQuizzes.map((quiz) => ({
+      type: "quiz",
+      text: `Quiz "${quiz.topic}" created for ${quiz.className}`,
+      time: quiz.sentAt ? new Date(quiz.sentAt).toLocaleString() : "Just now",
+      timestamp: new Date(quiz.sentAt || Date.now()).getTime(),
+    }));
+
+    // Add lessons planned by this teacher from localStorage
+    const allLessons = JSON.parse(localStorage.getItem("lessonPlans")) || [];
+    const teacherLessons = allLessons.filter(
+      (lesson) => lesson.teacherName === currentTeacherName
+    );
+
+    const lessonActivities = teacherLessons.map((lesson) => ({
+      type: "lesson",
+      text: `Lesson "${lesson.lessonTitle}" planned for "${lesson.className}"`,
+      time: lesson.createdAt ? new Date(lesson.createdAt).toLocaleString() : "Just now",
+      timestamp: new Date(lesson.createdAt || Date.now()).getTime(),
+    }));
+
+    // Combine and sort by timestamp
+    const combined = [
+      ...apiActivity.map((item) => ({
+        ...item,
+        timestamp: 0, // API items don't have reliable timestamps in this context
+      })),
+      ...quizActivities,
+      ...lessonActivities,
+    ];
+
+    // Sort by timestamp (most recent first)
+    return combined.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  })();
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-[#f7f8fc] text-slate-900">
         <div className="px-4 py-4 md:px-6">
-          <section className="relative overflow-hidden bg-gradient-to-r from-[#6b46f7] via-[#6240f2] to-[#5d3ef1] px-6 py-6 text-white shadow-sm md:px-8 md:py-7">
+          <section className="relative overflow-hidden bg-gradient-to-r from-[#3B82F6] via-[#2563EB] to-[#1D4ED8] px-6 py-6 text-white shadow-sm md:px-8 md:py-7">
             <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
             <div className="relative">
               <div className="mb-1 flex items-center gap-2 text-[14px] font-medium text-white/90">
@@ -190,7 +247,10 @@ export default function TeacherDashboard() {
                 You have {data?.stats?.atRiskAlerts ?? 0} at-risk student alerts and 3 quizzes scheduled today.
               </p>
 
-              <button className="mt-5 inline-flex items-center gap-3 rounded-none bg-white/15 px-4 py-2.5 text-[14px] font-medium text-white transition hover:bg-white/20">
+              <button 
+                onClick={() => alertsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                className="mt-5 inline-flex items-center gap-3 rounded-none bg-white/15 px-4 py-2.5 text-[14px] font-medium text-white transition hover:bg-white/20"
+              >
                 View Alerts
                 <ArrowRight className="h-4 w-4" />
               </button>
@@ -203,7 +263,7 @@ export default function TeacherDashboard() {
             </div>
           ) : null}
 
-          <section className="mt-5 grid gap-4 lg:grid-cols-6">
+          <section className="mt-5 grid gap-4 lg:grid-cols-5">
             {stats.map((item) => (
               <StatCard key={item.title} {...item} />
             ))}
@@ -227,7 +287,7 @@ export default function TeacherDashboard() {
                       <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine tickLine={false} />
                       <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} tickLine={false} />
                       <Tooltip />
-                      <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={34} fill="#6b46f7" />
+                      <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={34} fill="#3B82F6" />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -235,9 +295,18 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="rounded-sm border border-slate-200 bg-white p-4 shadow-sm">
-              <h2 className="mb-4 text-[15px] font-semibold text-slate-900">
-                Recent Activity
-              </h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-[15px] font-semibold text-slate-900">
+                  Recent Activity
+                </h2>
+                <button
+                  onClick={fetchDashboard}
+                  className="text-slate-500 hover:text-slate-900 transition"
+                  title="Refresh activity"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </div>
 
               <div className="space-y-4">
                 {loading ? (
@@ -245,12 +314,14 @@ export default function TeacherDashboard() {
                 ) : recentActivity.length ? (
                   recentActivity.map((item, index) => {
                     const Icon =
-                      index === 0
-                        ? FileText
-                        : index === 1
+                      item.type === "quiz"
+                        ? Brain
+                        : item.type === "lesson"
+                        ? BookOpen
+                        : item.type === "alert"
                         ? BadgeAlert
-                        : index === 2
-                        ? CalendarDays
+                        : item.type === "notification"
+                        ? FileText
                         : ClipboardList;
 
                     return (
@@ -302,7 +373,7 @@ export default function TeacherDashboard() {
             </div>
           </section>
 
-          <section className="mt-6 rounded-sm border border-[#ffc7cf] bg-[#fff5f6] p-4 shadow-sm">
+          <section ref={alertsRef} className="mt-6 rounded-sm border border-[#ffc7cf] bg-[#fff5f6] p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-[#e14b5a]">
                 <CircleAlert className="h-4 w-4" />
@@ -338,7 +409,10 @@ export default function TeacherDashboard() {
                       <div className="rounded-sm border border-slate-200 bg-white px-3 py-1 text-[13px] font-semibold text-slate-700 shadow-sm">
                         {student.score}
                       </div>
-                      <button className="rounded-sm border border-[#ff7d90] px-4 py-1.5 text-[13px] font-medium text-[#ff5d79] hover:bg-[#fff6f8]">
+                      <button 
+                        onClick={() => navigate("/teacher/performance-tracker")}
+                        className="rounded-sm border border-[#ff7d90] px-4 py-1.5 text-[13px] font-medium text-[#ff5d79] hover:bg-[#fff6f8]"
+                      >
                         View
                       </button>
                     </div>

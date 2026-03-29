@@ -34,8 +34,8 @@ export default function RadarChart({ student }) {
                     student.streak || 5,
                     student.avgPercentage || 60
                 ],
-                backgroundColor: "rgba(139, 92, 246, 0.3)",
-                borderColor: "purple"
+                backgroundColor: "rgba(59, 130, 246, 0.3)",
+                borderColor: "blue"
             }
         ]
     };
